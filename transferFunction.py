@@ -35,13 +35,43 @@ def calculateTheta(frequency_Hz, cableInfo):
     # 高周波につれて差が小さくなっている
     # 低周波から高周波まで
     # (波長の差 / 光速から求めた波長) * 100 の割合は一定(平均10％)
-    SPEED_OF_LIGHT = 3 * 10 ** 8  # 光速
-    waveLength = SPEED_OF_LIGHT / frequency_Hz  # λ(m)
-    # waveLength2 = 2 * np.pi / gamma.imag
-    # print((abs(waveLength - waveLength2) / waveLength) * 100)
+    # SPEED_OF_LIGHT = 3 * 10 ** 8  # 光速
+    # waveLength = SPEED_OF_LIGHT / frequency_Hz  # λ(m)
 
-    theta = gamma * cableInfo["cableLength"] * waveLength
+    # ケーブル長を1kmと仮定
+    cableLength = 1000
+
+    # theta = gamma * cableInfo["cableLength"] * waveLength
+    theta = gamma * cableLength
     return theta
+
+
+def calculateWaveLengthDiff(frequency_Hz, cableInfo):
+    omega = 2 * np.pi * frequency_Hz
+
+    # R_ohmPerM = cableInfo["resistance"] * 1000  # Ω/m
+    R_ohmPerM = 0
+    L = 1.31 * 10 ** -7  # H/m
+    C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
+    G = 0
+
+    # cmathを使わないとエラーが返ってくる
+    # R=G=0で以下の式を計算しているのならば
+    # alpha = 0
+    # beta = omega * math.sqrt(L * C_FperM)
+    # で、gamma = alpha + beta * 1j
+    # で計算した値とほぼ一致している
+    gamma = cmath.sqrt((R_ohmPerM + omega * L * 1j) * (G + omega * C_FperM * 1j))
+
+    # 高周波につれて差が小さくなっている
+    # 低周波から高周波まで
+    # (波長の差 / 光速から求めた波長) * 100 の割合は一定(平均12％)
+    SPEED_OF_LIGHT = 3 * 10 ** 8  # 光速
+    waveLength1 = SPEED_OF_LIGHT / frequency_Hz  # λ(m)
+    waveLength2 = 2 * np.pi / gamma.imag
+
+    diff = waveLength1 - waveLength2
+    return abs(diff) * 100 / waveLength1
 
 
 def createFMatrixForDcc(cableInfo, theta):
@@ -115,10 +145,10 @@ def createTransferFunction(Zr, frequency, cableInfo):
     R2 = Zr
 
     f_matrix_dcc = createFMatrixForDcc(cableInfo, theta)
-    A = f_matrix_dcc[0][0] # 無損失の場合、実数
-    B = f_matrix_dcc[0][1] # 無損失の場合、虚数
-    C = f_matrix_dcc[1][0] # 無損失の場合、虚数
-    D = f_matrix_dcc[1][1] # 無損失の場合、実数
+    A = f_matrix_dcc[0][0]  # 無損失の場合、実数
+    B = f_matrix_dcc[0][1]  # 無損失の場合、虚数
+    C = f_matrix_dcc[1][0]  # 無損失の場合、虚数
+    D = f_matrix_dcc[1][1]  # 無損失の場合、実数
 
     return 1 / (A + B / R2 + R1 * C + (R1 / R2) * D)
 
@@ -151,7 +181,7 @@ cable_3d2v = {
 Zr = 50
 
 # 単位はMHz (= 1 x 10^6 Hz)
-frequencies_Hz = range(1, 200 * 10 ** 2, 1)
+frequencies_Hz = range(1, 2 * 10 ** 6, 100)
 frequencies = frequencies_Hz
 
 transferFunctions1 = []
@@ -166,28 +196,59 @@ for frequency in frequencies:
     )
 
     # 回路全体の伝達関数を求める
-    transferFunction2 = createTransferFunction(Zr, frequency, cable_5c2v)
-    transferFunctions2.append(transferFunction2)
-
-    #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
     transferFunction1 = createTransferFunction(inputImpedance2, frequency, cable_3d2v)
     transferFunctions1.append(transferFunction1)
 
+    #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+    transferFunction2 = createTransferFunction(Zr, frequency, cable_5c2v)
+    transferFunctions2.append(transferFunction2)
+
 # 周波数特性
 # fig, ax = plt.subplots()
-# ax.plot(frequencies, list(map(abs, transferFunctions1)), label="Gain")
+# ax.plot(frequencies, list(map(abs, transferFunctions1)), label="|H(f)|")
 # ax.set_xlabel("frequency [Hz]")
-# ax.set_ylabel("Gain")
-# plt.show()
+# ax.set_ylabel("|H(f)|")
 
-fig, ax = plt.subplots(1, 2)
-ax[0].plot(frequencies, list(map(abs, transferFunctions1)), label="Gain")
-ax[0].set_xlabel("frequency [Hz]")
-ax[0].set_ylabel("|H(f)|")
-
-ax[1].plot(frequencies, list(map(abs, transferFunctions2)), label="Gain")
-ax[1].set_xlabel("frequency [Hz]")
-ax[1].set_ylabel("|H(f)|")
+# fig, ax = plt.subplots(1, 2)
+# ax[0].plot(frequencies, list(map(abs, transferFunctions1)), label="|H(f)|")
+# ax[0].set_xlabel("frequency [Hz]")
+# ax[0].set_ylabel("|H(f)|")
 # ax[0].set_xscale('log')
 # ax[0].set_yscale('log')
+
+# ax[1].plot(frequencies, list(map(abs, transferFunctions2)), label="|H(f)|")
+# ax[1].set_xlabel("frequency [Hz]")
+# ax[1].set_ylabel("|H(f)|")
+
+fig, ax = plt.subplots()
+# デシベル
+# ax.plot(
+#     frequencies,
+#     list(map(lambda tf: 20 * math.log10(abs(tf)), transferFunctions2)),
+# )
+# 電圧比
+ax.plot(
+    frequencies,
+    list(map(abs, transferFunctions2)),
+)
+ax.set_xlabel("frequency [Hz]")
+ax.set_ylabel("|H(f)|")
+# ax.set_ylabel("Gain")
+# ax.set_xscale('log')
+# ax.set_yscale('log')
+fig.savefig("frequency_characteristic_5c2vAndZr.png")
+
 plt.show()
+
+# freqs = range(1, 200 * 10 ** 6, 1000)
+
+# waveLengthDiffs = []
+# for frequency_Hz in freqs:
+#     diff = calculateWaveLengthDiff(frequency_Hz, cable_5c2v)
+#     waveLengthDiffs.append(diff)
+
+# fig, ax = plt.subplots()
+# ax.plot(freqs, waveLengthDiffs, label="Diff")
+# ax.set_xlabel("frequency [Hz]")
+# ax.set_ylabel("abs(waveLength1 - waveLength2)")
+# plt.show()

@@ -134,6 +134,75 @@ def calculateTheta(impedance, cableLength, frequency, alphas, capacity):
     return gamma * cableLength
 
 
+def calculateTheta(frequency_Hz, cableInfo):
+    """
+    伝搬定数γと同軸ケーブルの長さlの積を求める
+    G = 0で考える
+
+    Parameters
+    ----------
+    frequency_Hz : float
+        周波数(Hz)
+    cableInfo : dictionary
+        ケーブルの仕様
+    """
+    omega = 2 * np.pi * frequency_Hz
+
+    # R_ohmPerM = cableInfo["resistance"] * 1000  # Ω/m
+    R_ohmPerM = 0
+    L = 1.31 * 10 ** -7  # H/m
+    C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
+    G = 0
+
+    # cmathを使わないとエラーが返ってくる
+    # R=G=0で以下の式を計算しているのならば
+    # alpha = 0
+    # beta = omega * math.sqrt(L * C_FperM)
+    # で、gamma = alpha + beta * 1j
+    # で計算した値とほぼ一致している
+    gamma = cmath.sqrt((R_ohmPerM + omega * L * 1j) * (G + omega * C_FperM * 1j))
+
+    # 高周波につれて差が小さくなっている
+    # 低周波から高周波まで
+    # (波長の差 / 光速から求めた波長) * 100 の割合は一定(平均10％)
+    # SPEED_OF_LIGHT = 3 * 10 ** 8  # 光速
+    # waveLength = SPEED_OF_LIGHT / frequency_Hz  # λ(m)
+
+    # ケーブル長を1kmと仮定
+    cableLength = 1000
+
+    # theta = gamma * cableInfo["cableLength"] * waveLength
+    theta = gamma * cableLength
+    return theta
+
+def calculateWaveLengthDiff(frequency_Hz, cableInfo):
+    omega = 2 * np.pi * frequency_Hz
+
+    # R_ohmPerM = cableInfo["resistance"] * 1000  # Ω/m
+    R_ohmPerM = 0
+    L = 1.31 * 10 ** -7  # H/m
+    C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
+    G = 0
+
+    # cmathを使わないとエラーが返ってくる
+    # R=G=0で以下の式を計算しているのならば
+    # alpha = 0
+    # beta = omega * math.sqrt(L * C_FperM)
+    # で、gamma = alpha + beta * 1j
+    # で計算した値とほぼ一致している
+    gamma = cmath.sqrt((R_ohmPerM + omega * L * 1j) * (G + omega * C_FperM * 1j))
+
+    # 高周波につれて差が小さくなっている
+    # 低周波から高周波まで
+    # (波長の差 / 光速から求めた波長) * 100 の割合は一定(平均12％)
+    SPEED_OF_LIGHT = 3 * 10 ** 8  # 光速
+    waveLength1 = SPEED_OF_LIGHT / frequency_Hz  # λ(m)
+    waveLength2 = 2 * np.pi / gamma.imag
+
+    diff = waveLength1 - waveLength2
+    return abs(diff) * 100 / waveLength1
+
+
 # fからαを求める
 def calculateAlpha(frequency, alphas):
     """

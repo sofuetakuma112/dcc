@@ -4,12 +4,12 @@ import math
 import cmath
 import tqdm
 import util
-import cable
+import cables
 
 
 def createFMatrixLC(frequency_Hz, cableInfo):
-    L = 1.31 * 10 ** -7  # H/m
-    C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
+    L = 1.31 * 10 ** -7 * cableInfo["length"]  # H/m * m
+    C_FperM = cableInfo["capacitance"] * 10 ** -12 * cableInfo["length"]  # F/m * m
     omega = 2 * np.pi * frequency_Hz
 
     return np.array(
@@ -65,21 +65,19 @@ def calcTfByEquation(frequency_Hz, resistance, cableInfo):
 
 
 # frequencies_Hz = range(0, 200 * 10 ** 6, 10000)
-frequencies_Hz = range(180 * 10 ** 6, 200 * 10 ** 6, 100)
+frequencies_Hz = list(range(0, 1000, 1))
+frequencies_Hz.extend(list(range(1000, 200 * 10 ** 6, 1000)))
 # resistances = [5, 50, 1000000]
 resistances = [50]
-times = 10
+times = 1
 
 
 def drawFrequencyResponse(calcTransferFunction, cableInfo, outputFileName=""):
     fig, axes = plt.subplots(1, len(resistances))
-    # axes = axes.flatten()
+    tfs_nthPwrOf10 = []
 
     for i, resistance in enumerate(resistances):
         tfs = []
-        # tf_10Mhz = 0
-        # tf_100Mhz = 0
-        # gain_ratio = 0
 
         for frequency_Hz in tqdm.tqdm(frequencies_Hz):
             tf = calcTransferFunction(
@@ -89,32 +87,30 @@ def drawFrequencyResponse(calcTransferFunction, cableInfo, outputFileName=""):
             )
             tfs.append(tf)
 
-            # ゲインの傾きを求める
-            # # 周波数が10Mhzのとき
-            # if frequency_Hz == 10 * 10 ** 6:
-            #     tf_10Mhz = tf
-            # if frequency_Hz == 100 * 10 ** 6:
-            #     tf_100Mhz = tf
-            #     # gain_ratio = (util.convertTf2dB(tf_100Mhz) / util.convertTf2dB(tf_10Mhz))
-            #     gain_ratio = (abs(tf_100Mhz) / abs(tf_10Mhz))
-            # if gain_ratio != 0:
-            #     print(f"{gain_ratio}")
-            #     gain_ratio = 0
+            # 10の累乗の周波数ごとに伝達関数の値をリストに格納する
+            if frequency_Hz > 1 and math.log10(frequency_Hz).is_integer():
+                tfs_nthPwrOf10.append({"frequency_Hz": frequency_Hz, "tf": tf})
 
         # 伝達関数G(f)にabs関数を適用してゲインを求める
         currentAx = None
         if type(axes) is list:
+            # 複数のグラフを同時に描画する場合
             currentAx = axes[i]
         else:
+            # 一つのグラフを描画する場合
             currentAx = axes
         currentAx.plot(
             frequencies_Hz,
-            list(map(util.convertTf2dB, tfs)),
+            list(map(util.convertGain2dB, tfs)),
         )
         currentAx.set_title(f"R = {resistance}")
         currentAx.set_xlabel("frequency [Hz]")
-        currentAx.set_ylabel("Gain [db]")
+        currentAx.set_ylabel("Gain [dB]")
         currentAx.set_xscale("log")
+
+        # ゲインの傾きを求める
+        gain_ratio = abs(tfs_nthPwrOf10[-1]["tf"]) / abs(tfs_nthPwrOf10[-2]["tf"])
+        print(f"{util.convertGain2dB(gain_ratio)}[dB/dec]")
 
     if outputFileName != "":
         fig.savefig(f"{outputFileName}.png")
@@ -157,11 +153,11 @@ def drawFParameter(cableInfo, outputFileName=""):
 
 
 # drawFrequencyResponse(calcTfByEquation, cable.cable_5c2v, "calc_by_tf_equation")
-# drawFrequencyResponse(createTransferFunction, cable.cable_5c2v, "calc_by_fMatrix")
+drawFrequencyResponse(createTransferFunction, cables.cable_5c2v, "calc_by_fMatrix")
 # drawFrequencyResponse(
 #     createTransferFunctionByContinuousLCCircuit,
 #     cable.cable_5c2v,
 #     f"calc_by_{times}_consective_LC_circuits_fMatrix",
 # )
 
-drawFParameter(cable.cable_5c2v)
+# drawFParameter(cable.cable_5c2v)

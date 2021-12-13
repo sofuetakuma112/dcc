@@ -16,5 +16,5 @@ def createTransferFunctionFromFMatrix(resistance, f_matrix):
     return 1 / (A + B / R2 + R1 * C + (R1 / R2) * D)
 
 # 伝達関数G(f)からdBへ変換する
-def convertTf2dB(tf):
+def convertGain2dB(tf):
     return 20 * math.log10(abs(tf))

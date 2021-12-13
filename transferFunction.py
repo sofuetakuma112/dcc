@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import math
 import cmath
 import tqdm
-import cable
+import cables
 import util
 
 
@@ -34,10 +34,7 @@ def calculateTheta(frequency_Hz, cableInfo):
     # で計算した値とほぼ一致している
     gamma = cmath.sqrt((R_ohmPerM + omega * L * 1j) * (G + omega * C_FperM * 1j))
 
-    # ケーブル長を1kmと仮定
-    cableLength = 1000
-
-    theta = gamma * cableLength
+    theta = gamma * cableInfo["length"]
     return theta
 
 
@@ -125,17 +122,17 @@ for frequency in tqdm.tqdm(frequencies_Hz):
     inputImpedance2 = calculateInputImpedanceByFMatrix(
         Zr,
         frequency,
-        cable.cable_5c2v,
+        cables.cable_5c2v,
     )
 
     # 回路全体の伝達関数を求める
     transferFunction1 = createTransferFunction(
-        inputImpedance2, frequency, cable.cable_3d2v
+        inputImpedance2, frequency, cables.cable_3d2v
     )
     transferFunctions1.append(transferFunction1)
 
     #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
-    transferFunction2 = createTransferFunction(Zr, frequency, cable.cable_5c2v)
+    transferFunction2 = createTransferFunction(Zr, frequency, cables.cable_5c2v)
     transferFunctions2.append(transferFunction2)
 
 fig, ax = plt.subplots()

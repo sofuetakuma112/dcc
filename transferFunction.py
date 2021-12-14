@@ -317,4 +317,5 @@ frequencies_Hz.extend(list(range(1000, 200 * 10 ** 5, 1000)))
 # drawHyperbolic(cables.cable_5c2v)
 # drawFrequencyResponse()
 # drawFrequencyResponse("dcc_frequency_response_from_fMatrix.png")
-drawFrequencyResponseBySomeConditions([0.0001, 0.001, 0.01], [0.0001, 0.001, 0.01], "both")
+nthPwrOf10_list = [v * 10 ** (-1 * (i + 2)) for i, v in enumerate([1] * 5)]
+drawFrequencyResponseBySomeConditions(nthPwrOf10_list, nthPwrOf10_list, "both")

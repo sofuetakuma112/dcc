@@ -5,6 +5,10 @@ import cmath
 import tqdm
 import cables
 import util
+import warnings
+
+warnings.resetwarnings()
+warnings.simplefilter("error")
 
 
 def calculateTheta(frequency_Hz, cableInfo):
@@ -21,10 +25,10 @@ def calculateTheta(frequency_Hz, cableInfo):
     """
     omega = 2 * np.pi * frequency_Hz
 
-    R_ohmPerM = 0
+    R_ohmPerM = 0.001  # Ω/m
     L = 1.31 * 10 ** -7  # H/m
     C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
-    G = 0
+    G = 0.001 # S/m 回路における電流の流れやすさ
 
     # cmathを使わないとエラーが返ってくる
     # R=G=0で以下の式を計算しているのならば
@@ -33,8 +37,8 @@ def calculateTheta(frequency_Hz, cableInfo):
     # で、gamma = alpha + beta * 1j
     # で計算した値とほぼ一致している
     gamma = cmath.sqrt((R_ohmPerM + omega * L * 1j) * (G + omega * C_FperM * 1j))
-
     theta = gamma * cableInfo["length"]
+
     return theta
 
 
@@ -49,10 +53,18 @@ def createFMatrixForDcc(cableInfo, theta):
     theta : float
         伝搬定数γと同軸ケーブルの長さlの積
     """
+    try:
+        cosh = cmath.cosh(theta)
+    except OverflowError:
+        cosh = 1e6 * 1j * 1e6
+    try:
+        sinh = cmath.sinh(theta)
+    except OverflowError:
+        sinh = 1e6 * 1j * 1e6
     return np.array(
         [
-            [cmath.cosh(theta), cableInfo["impedance"] * cmath.sinh(theta)],
-            [cmath.sinh(theta) / cableInfo["impedance"], cmath.cosh(theta)],
+            [cosh, cableInfo["impedance"] * sinh],
+            [sinh / cableInfo["impedance"], cosh],
         ]
     )
 
@@ -105,44 +117,133 @@ def createTransferFunction(Zr, frequency, cableInfo):
     """
 
     f_matrix_dcc = createFMatrixForDcc(cableInfo, calculateTheta(frequency, cableInfo))
+
     return util.createTransferFunctionFromFMatrix(Zr, f_matrix_dcc)
+    # try:
+    #     return util.createTransferFunctionFromFMatrix(Zr, f_matrix_dcc)
+    # except:
+    #     print(f_matrix_dcc[0][0], f_matrix_dcc[0][1])
+    #     return 1
+
+
+def drawFrequencyResponse(fileName=""):
+    transferFunctions1 = []
+    transferFunctions2 = []
+    tfs_nthPwrOf10 = []
+    # 周波数ごとに伝達関数を求める
+    for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+        # 5C-2V + Zrの回路の入力インピーダンスを求める
+        inputImpedance2 = calculateInputImpedanceByFMatrix(
+            Zr,
+            frequency_Hz,
+            cables.cable_5c2v,
+        )
+
+        # 回路全体の伝達関数を求める
+        transferFunction1 = createTransferFunction(
+            inputImpedance2, frequency_Hz, cables.cable_3d2v
+        )
+        transferFunctions1.append(transferFunction1)
+
+        #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+        transferFunction2 = createTransferFunction(Zr, frequency_Hz, cables.cable_5c2v)
+        transferFunctions2.append(transferFunction2)
+
+        if frequency_Hz > 1 and math.log10(frequency_Hz).is_integer():
+            tfs_nthPwrOf10.append(
+                {"frequency_Hz": frequency_Hz, "tf": transferFunction2}
+            )
+
+    # ゲインの傾きを求める
+    tf_big = list(
+        filter(lambda dict: dict["frequency_Hz"] == 1 * 10 ** 5, tfs_nthPwrOf10)
+    )[0]["tf"]
+    tf_small = list(
+        filter(lambda dict: dict["frequency_Hz"] == 1 * 10 ** 6, tfs_nthPwrOf10)
+    )[0]["tf"]
+    gain_ratio = abs(tf_small) / abs(tf_big)
+    print(f"{util.convertGain2dB(gain_ratio)}[dB/dec]")
+
+    fig, axes = plt.subplots(1, 2)
+    axes[0].plot(
+        frequencies_Hz,
+        list(map(util.convertGain2dB, transferFunctions2)),
+    )
+    axes[0].set_title("5C2V + Zr")
+    axes[0].set_xlabel("frequency [Hz]")
+    axes[0].set_ylabel("Gain [dB]")
+    axes[0].set_xscale("log")
+
+    axes[1].plot(
+        frequencies_Hz,
+        list(map(util.convertGain2dB, transferFunctions1)),
+    )
+    axes[1].set_title("2cables + Zr")
+    axes[1].set_xlabel("frequency [Hz]")
+    axes[1].set_ylabel("Gain [dB]")
+    axes[1].set_xscale("log")
+
+    if fileName != "":
+        fig.savefig(f"{fileName}")
+    plt.show()
+
+
+# R = G = 0.0001だとcosh, sinhの計算にエラーは発生しない
+# R = G = 1でもエラーは発生しない
+# R = 0.0001, G = 1だとRuntimeWarning: overflow encountered in multiply
+def drawHyperbolic(cableInfo):
+    coshs = []
+    sinhs = []
+    for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+        theta = calculateTheta(frequency_Hz, cableInfo)
+        try:
+            cosh = cmath.cosh(theta)
+        except OverflowError:
+            cosh = 1e6 * 1j * 1e6
+        try:
+            sinh = cmath.sinh(theta)
+        except OverflowError:
+            sinh = 1e6 * 1j * 1e6
+        coshs.append(cosh)
+        sinhs.append(sinh)
+
+    fig, axes = plt.subplots(2, 2)
+    axes = axes.flatten()
+    axes[0].plot(
+        frequencies_Hz,
+        list(map(lambda cosh: cosh.real, coshs)),
+    )
+    axes[0].set_xlabel("frequency [Hz]")
+    axes[0].set_ylabel("cosh.real")
+    axes[1].plot(
+        frequencies_Hz,
+        list(map(lambda cosh: cosh.imag, coshs)),
+    )
+    axes[1].set_xlabel("frequency [Hz]")
+    axes[1].set_ylabel("cosh.imag")
+    axes[2].plot(
+        frequencies_Hz,
+        list(map(lambda sinh: sinh.real, sinhs)),
+    )
+    axes[2].set_xlabel("frequency [Hz]")
+    axes[2].set_ylabel("sinh.real")
+    axes[3].plot(
+        frequencies_Hz,
+        list(map(lambda sinh: sinh.imag, sinhs)),
+    )
+    axes[3].set_xlabel("frequency [Hz]")
+    axes[3].set_ylabel("sinh.imag")
+    plt.show()
 
 
 # 受端のインピーダンス
 Zr = 50
 
 # 単位はMHz (= 1 x 10^6 Hz)
-frequencies_Hz = range(0, 200 * 10 ** 6, 100)
+frequencies_Hz = list(range(0, 1000, 1))
+frequencies_Hz.extend(list(range(1000, 200 * 10 ** 5, 1000)))
+# frequencies_Hz = range(0, 200 * 10 ** 6, 1000)
 
-transferFunctions1 = []
-transferFunctions2 = []
-# 周波数ごとに伝達関数を求める
-for frequency in tqdm.tqdm(frequencies_Hz):
-    # 5C-2V + Zrの回路の入力インピーダンスを求める
-    inputImpedance2 = calculateInputImpedanceByFMatrix(
-        Zr,
-        frequency,
-        cables.cable_5c2v,
-    )
-
-    # 回路全体の伝達関数を求める
-    transferFunction1 = createTransferFunction(
-        inputImpedance2, frequency, cables.cable_3d2v
-    )
-    transferFunctions1.append(transferFunction1)
-
-    #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
-    transferFunction2 = createTransferFunction(Zr, frequency, cables.cable_5c2v)
-    transferFunctions2.append(transferFunction2)
-
-fig, ax = plt.subplots()
-ax.plot(
-    frequencies_Hz,
-    list(map(util.convertTf2dB, transferFunctions2)),
-)
-ax.set_xlabel("frequency [Hz]")
-ax.set_ylabel("Gain [db]")
-ax.set_xscale("log")
-
-fig.savefig(f"dcc_frequency_response_from_fMatrix.png")
-plt.show()
+# drawHyperbolic(cables.cable_5c2v)
+drawFrequencyResponse()
+# drawFrequencyResponse("dcc_frequency_response_from_fMatrix.png")

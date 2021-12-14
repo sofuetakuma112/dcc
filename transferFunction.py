@@ -25,10 +25,10 @@ def calculateTheta(frequency_Hz, cableInfo):
     """
     omega = 2 * np.pi * frequency_Hz
 
-    R_ohmPerM = 0.001  # Ω/m
+    R_ohmPerM = cableInfo["resistance"]  # Ω/m
     L = 1.31 * 10 ** -7  # H/m
     C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
-    G = 0.001 # S/m 回路における電流の流れやすさ
+    G = cableInfo["conductance"]  # S/m 回路における電流の流れやすさ
 
     # cmathを使わないとエラーが返ってくる
     # R=G=0で以下の式を計算しているのならば
@@ -188,6 +188,76 @@ def drawFrequencyResponse(fileName=""):
     plt.show()
 
 
+def drawFrequencyResponseBySomeConditions(
+    resistances, conductances, mode="r"
+):
+    if mode == "both":
+        # すべてのR, Gの組み合わせで描画する
+        fig, axes = plt.subplots(len(resistances), len(conductances))
+        for i, resistance in enumerate(resistances):
+            for j, conductance in enumerate(conductances):
+                tfs = []
+                for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+                    cable = cables.cable_5c2v.copy()
+                    cable["resistance"] = resistance
+                    cable["conductance"] = conductance
+                    #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+                    tf = createTransferFunction(Zr, frequency_Hz, cable)
+                    tfs.append(tf)
+                axes[i][j].plot(
+                    frequencies_Hz,
+                    list(map(util.convertGain2dB, tfs)),
+                )
+                axes[i][j].set_title(f"R = {resistance}, G = {conductance}")
+                axes[i][j].set_xlabel("frequency [Hz]")
+                axes[i][j].set_ylabel("Gain [dB]")
+                axes[i][j].set_xscale("log")
+    elif mode == "r":
+        # それぞれのRについてグラフを描画する
+        fig, axes = plt.subplots(1, len(resistances))
+        for i, resistance in enumerate(resistances):
+            tfs = []
+            for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+                cable = cables.cable_5c2v.copy()
+                cable["resistance"] = resistance
+                #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+                tf = createTransferFunction(Zr, frequency_Hz, cable)
+                tfs.append(tf)
+            axes[i].plot(
+                frequencies_Hz,
+                list(map(util.convertGain2dB, tfs)),
+            )
+            conductance = cables.cable_5c2v["conductance"]
+            axes[i].set_title(f"R = {resistance}, G = {conductance}")
+            axes[i].set_xlabel("frequency [Hz]")
+            axes[i].set_ylabel("Gain [dB]")
+            axes[i].set_xscale("log")
+    elif mode == "g":
+        # それぞれのGについてグラフを描画する
+        fig, axes = plt.subplots(1, len(conductances))
+        for i, conductance in enumerate(conductances):
+            tfs = []
+            for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+                cable = cables.cable_5c2v.copy()
+                cable["conductance"] = conductance
+                #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+                tf = createTransferFunction(Zr, frequency_Hz, cable)
+                tfs.append(tf)
+            axes[i].plot(
+                frequencies_Hz,
+                list(map(util.convertGain2dB, tfs)),
+            )
+            resistance = cables.cable_5c2v["resistance"]
+            axes[i].set_title(f"R = {resistance}, G = {conductance}")
+            axes[i].set_xlabel("frequency [Hz]")
+            axes[i].set_ylabel("Gain [dB]")
+            axes[i].set_xscale("log")
+    else:
+        raise ValueError("modeの引数に不正な値が渡された")
+
+    plt.show()
+
+
 # R = G = 0.0001だとcosh, sinhの計算にエラーは発生しない
 # R = G = 1でもエラーは発生しない
 # R = 0.0001, G = 1だとRuntimeWarning: overflow encountered in multiply
@@ -245,5 +315,6 @@ frequencies_Hz.extend(list(range(1000, 200 * 10 ** 5, 1000)))
 # frequencies_Hz = range(0, 200 * 10 ** 6, 1000)
 
 # drawHyperbolic(cables.cable_5c2v)
-drawFrequencyResponse()
+# drawFrequencyResponse()
 # drawFrequencyResponse("dcc_frequency_response_from_fMatrix.png")
+drawFrequencyResponseBySomeConditions([0.0001, 0.001, 0.01], [0.0001, 0.001, 0.01], "both")

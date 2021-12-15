@@ -124,11 +124,13 @@ def createTransferFunction(Zr, frequency_Hz, cableInfo):
 
     # endImpedance = Zr
     endImpedance = cableInfo.calcCharacteristicImpedance(frequency_Hz)
+    # endImpedance = float('inf')
+    # endImpedance = 1e-8
     return util.createTransferFunctionFromFMatrix(endImpedance, f_matrix_dcc)
 
 
-def drawFrequencyResponse(fileName=""):
-    transferFunctions1 = []
+def drawFrequencyResponse(frequencies_Hz, cableInfo, fileName=""):
+    # transferFunctions1 = []
     transferFunctions2 = []
     tfs_nthPwrOf10 = []
     # 周波数ごとに伝達関数を求める
@@ -148,7 +150,7 @@ def drawFrequencyResponse(fileName=""):
         # transferFunctions1.append(transferFunction1)
 
         #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
-        transferFunction2 = createTransferFunction(Zr, frequency_Hz, cable_vertual)
+        transferFunction2 = createTransferFunction(Zr, frequency_Hz, cableInfo)
         transferFunctions2.append(transferFunction2)
 
         if frequency_Hz > 1 and math.log10(frequency_Hz).is_integer():
@@ -157,34 +159,38 @@ def drawFrequencyResponse(fileName=""):
             )
 
     # ゲインの傾きを求める
-    tf_big = list(
-        filter(lambda dict: dict["frequency_Hz"] == 1 * 10 ** 5, tfs_nthPwrOf10)
-    )[0]["tf"]
-    tf_small = list(
-        filter(lambda dict: dict["frequency_Hz"] == 1 * 10 ** 6, tfs_nthPwrOf10)
-    )[0]["tf"]
-    gain_ratio = abs(tf_small) / abs(tf_big)
-    print(f"{util.convertGain2dB(gain_ratio)}[dB/dec]")
+    slope = util.calcMinimumSlope(tfs_nthPwrOf10)
+    print(f"slope: {slope}[dB/dec]")
 
-    # fig, axes = plt.subplots(1, 2)
-    fig, ax = plt.subplots()
-    ax.plot(
+    fig, axes = plt.subplots(1, 2)
+
+    axes[0].plot(
         frequencies_Hz,
         list(map(util.convertGain2dB, transferFunctions2)),
     )
-    ax.set_title("vertual cable + Zr")
-    ax.set_xlabel("frequency [Hz]")
-    ax.set_ylabel("Gain [dB]")
-    ax.set_xscale("log")
+    axes[0].set_title("vertual cable + Zr")
+    axes[0].set_xlabel("frequency [Hz]")
+    axes[0].set_ylabel("Gain [dB]")
+    axes[0].set_xscale("log")
 
-    # axes[1].plot(
+    axes[1].plot(
+        frequencies_Hz,
+        list(map(lambda tf: math.atan(tf.imag / tf.real), transferFunctions2)),
+    )
+    axes[1].set_title("vertual cable + Zr")
+    axes[1].set_xlabel("frequency [Hz]")
+    axes[1].set_ylabel("theta [rad]")
+    axes[1].set_xscale("log")
+
+    # fig, ax = plt.subplots()
+    # ax.plot(
     #     frequencies_Hz,
-    #     list(map(util.convertGain2dB, transferFunctions1)),
+    #     list(map(util.convertGain2dB, transferFunctions2)),
     # )
-    # axes[1].set_title("2cables + Zr")
-    # axes[1].set_xlabel("frequency [Hz]")
-    # axes[1].set_ylabel("Gain [dB]")
-    # axes[1].set_xscale("log")
+    # ax.set_title("vertual cable + Zr")
+    # ax.set_xlabel("frequency [Hz]")
+    # ax.set_ylabel("Gain [dB]")
+    # ax.set_xscale("log")
 
     if fileName != "":
         fig.savefig(f"{fileName}")
@@ -216,19 +222,10 @@ def drawFrequencyResponseBySomeConditions(resistances, conductances, mode="r"):
                         tfs_nthPwrOf10.append({"frequency_Hz": frequency_Hz, "tf": tf})
 
                 # 周波数特性の傾きを求める
-                slopes = []
-                nOfCombinations = len(tfs_nthPwrOf10) - 1
-                index = 0
-                # print(i, j, tfs_nthPwrOf10)
-                for _ in range(nOfCombinations):
-                    tf_big = tfs_nthPwrOf10[index]["tf"]
-                    tf_small = tfs_nthPwrOf10[index + 1]["tf"]
-                    gain_ratio = abs(tf_small) / abs(tf_big)
-                    slopes.append(util.convertGain2dB(gain_ratio))
-                    index += 1
+                slope = util.calcMinimumSlope(tfs_nthPwrOf10)
                 # 傾きのリストの中から最小値を選択する
                 logs.append(
-                    f"R = {resistance}, G = {conductance}, slope: {min(slopes)}[dB/dec]"
+                    f"R = {resistance}, G = {conductance}, slope: {slope}[dB/dec]"
                 )
 
                 axes[i][j].plot(
@@ -308,7 +305,7 @@ def drawFrequencyResponseBySomeConditions(resistances, conductances, mode="r"):
 # R = G = 0.0001だとcosh, sinhの計算にエラーは発生しない
 # R = G = 1でもエラーは発生しない
 # R = 0.0001, G = 1だとRuntimeWarning: overflow encountered in multiply
-def drawHyperbolic(cableInfo):
+def drawHyperbolic(frequencies_Hz, cableInfo):
     coshs = []
     sinhs = []
     for frequency_Hz in tqdm(frequencies_Hz):
@@ -332,53 +329,62 @@ def drawHyperbolic(cableInfo):
     )
     axes[0].set_xlabel("frequency [Hz]")
     axes[0].set_ylabel("cosh.real")
+    axes[0].set_xscale("log")
+
     axes[1].plot(
         frequencies_Hz,
         list(map(lambda cosh: cosh.imag, coshs)),
     )
     axes[1].set_xlabel("frequency [Hz]")
     axes[1].set_ylabel("cosh.imag")
+    axes[1].set_xscale("log")
+
     axes[2].plot(
         frequencies_Hz,
         list(map(lambda sinh: sinh.real, sinhs)),
     )
     axes[2].set_xlabel("frequency [Hz]")
     axes[2].set_ylabel("sinh.real")
+    axes[2].set_xscale("log")
+
     axes[3].plot(
         frequencies_Hz,
         list(map(lambda sinh: sinh.imag, sinhs)),
     )
     axes[3].set_xlabel("frequency [Hz]")
     axes[3].set_ylabel("sinh.imag")
+    axes[3].set_xscale("log")
     plt.show()
 
 
-def drawImpedance(frequencies_Hz):
+def drawImpedance(frequencies_Hz, cableInfo):
     impedances = []
-    for frequency_Hz in tqdm(frequencies_Hz):
-        impedances.append(cable_vertual.calcCharacteristicImpedance(frequency_Hz))
+    for frequency_Hz in tqdm(frequencies_Hz, leave=False):
+        impedances.append(cableInfo.calcCharacteristicImpedance(frequency_Hz))
 
-    fig, axes = plt.subplots(1, 3)
-    axes[0].plot(
+    fig, ax = plt.subplots()
+    ax.plot(
         frequencies_Hz,
         list(map(lambda x: x.real, impedances)),
+        color="red",
+        label="real",
     )
-    axes[0].set_xlabel("frequency [Hz]")
-    axes[0].set_ylabel("characteristic impedance (real)")
-
-    axes[1].plot(
+    ax.plot(
         frequencies_Hz,
         list(map(lambda x: x.imag, impedances)),
+        color="green",
+        label="imag",
     )
-    axes[1].set_xlabel("frequency [Hz]")
-    axes[1].set_ylabel("characteristic impedance (imag)")
-
-    axes[2].plot(
+    ax.plot(
         frequencies_Hz,
         list(map(lambda x: abs(x), impedances)),
+        color="blue",
+        label="absolute",
     )
-    axes[2].set_xlabel("frequency [Hz]")
-    axes[2].set_ylabel("characteristic impedance (absolute)")
+    ax.set_xlabel("frequency [Hz]")
+    ax.set_ylabel("impedance [Ω]")
+    ax.set_xscale("log")
+    ax.legend()
 
     plt.show()
 
@@ -395,23 +401,33 @@ cable_vertual = cables.Cable(
     length=1000,
 )
 
-# 単位はMHz (= 1 x 10^6 Hz)
-frequencies_Hz = list(range(0, 10000, 10))
-frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
-# frequencies_Hz = range(0, 200 * 10 ** 6, 1000)
+cable_noLoss_vertual = cables.Cable(
+    resistance=0,
+    inductance=1.31e-7,
+    conductance=0,
+    capacitance=67e-12,
+    length=1000,
+)
 
 # cosh, sinhの計算結果をグラフに描画する
-# drawHyperbolic(cables.cable_5c2v)
+frequencies_forHyperbolic_Hz = list(range(0, 10000, 10))
+frequencies_forHyperbolic_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
+# drawHyperbolic(frequencies_forHyperbolic_Hz, cable_vertual)
+# drawHyperbolic(frequencies_forHyperbolic_Hz, cable_noLoss_vertual)
 
 # ケーブルの周波数特性を描画する
-# drawFrequencyResponse()
-# drawFrequencyResponse("dcc_frequency_response_from_fMatrix.png")
+frequencies_Hz = list(range(0, 10000, 10))
+frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
+drawFrequencyResponse(frequencies_Hz, cable_vertual)
+# drawFrequencyResponse(frequencies_Hz, cable_noLoss_vertual)
 
 # 複数のR, Gの組み合わせごとに周波数特性をグラフ化する
 nthPwrOf10_list = [v * 10 ** (-1 * (i + 2)) for i, v in enumerate([1] * 5)]
 nthPwrOf10_list2 = [v * 10 ** (-1 * (i + 3)) for i, v in enumerate([4] * 5)]
-drawFrequencyResponseBySomeConditions(nthPwrOf10_list, nthPwrOf10_list2, "both")
+# drawFrequencyResponseBySomeConditions(nthPwrOf10_list, nthPwrOf10_list2, "both")
 
 # 回路素子の値と周波数から求めた特性インピーダンスをグラフにする
-frequencies_test_Hz = range(0, 100 * 10 ** 5, 1000)
-# drawImpedance(frequencies_test_Hz)
+frequencies_test_Hz = list(range(0, 10000, 10))
+frequencies_test_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
+# drawImpedance(frequencies_test_Hz, cable_vertual)
+# drawImpedance(frequencies_test_Hz, cable_noLoss_vertual)

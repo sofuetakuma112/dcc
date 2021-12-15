@@ -73,7 +73,7 @@ times = 1
 
 
 def drawFrequencyResponse(calcTransferFunction, cableInfo, outputFileName=""):
-    fig, axes = plt.subplots(1, len(resistances))
+    fig, axes = plt.subplots(1, 2)
     tfs_nthPwrOf10 = []
 
     for i, resistance in enumerate(resistances):
@@ -91,26 +91,27 @@ def drawFrequencyResponse(calcTransferFunction, cableInfo, outputFileName=""):
             if frequency_Hz > 1 and math.log10(frequency_Hz).is_integer():
                 tfs_nthPwrOf10.append({"frequency_Hz": frequency_Hz, "tf": tf})
 
+        slope = util.calcMinimumSlope(tfs_nthPwrOf10)
+        print(f"slope: {slope}[dB/dec]")
+
         # 伝達関数G(f)にabs関数を適用してゲインを求める
-        currentAx = None
-        if type(axes) is list:
-            # 複数のグラフを同時に描画する場合
-            currentAx = axes[i]
-        else:
-            # 一つのグラフを描画する場合
-            currentAx = axes
-        currentAx.plot(
+        axes[0].plot(
             frequencies_Hz,
             list(map(util.convertGain2dB, tfs)),
         )
-        currentAx.set_title(f"R = {resistance}")
-        currentAx.set_xlabel("frequency [Hz]")
-        currentAx.set_ylabel("Gain [dB]")
-        currentAx.set_xscale("log")
+        axes[0].set_title(f"R = {resistance}")
+        axes[0].set_xlabel("frequency [Hz]")
+        axes[0].set_ylabel("Gain [dB]")
+        axes[0].set_xscale("log")
 
-        # ゲインの傾きを求める
-        gain_ratio = abs(tfs_nthPwrOf10[-1]["tf"]) / abs(tfs_nthPwrOf10[-2]["tf"])
-        print(f"{util.convertGain2dB(gain_ratio)}[dB/dec]")
+        axes[1].plot(
+            frequencies_Hz,
+            list(map(lambda tf: math.atan(tf.imag / tf.real) * 180 / np.pi, tfs)),
+        )
+        axes[1].set_title(f"R = {resistance}")
+        axes[1].set_xlabel("frequency [Hz]")
+        axes[1].set_ylabel("theta [rad]")
+        axes[1].set_xscale("log")
 
     if outputFileName != "":
         fig.savefig(f"{outputFileName}.png")
@@ -153,7 +154,7 @@ def drawFParameter(cableInfo, outputFileName=""):
 
 
 # drawFrequencyResponse(calcTfByEquation, cable.cable_5c2v, "calc_by_tf_equation")
-drawFrequencyResponse(createTransferFunction, cables.cable_5c2v, "calc_by_fMatrix")
+drawFrequencyResponse(createTransferFunction, cables.cable_5c2v)
 # drawFrequencyResponse(
 #     createTransferFunctionByContinuousLCCircuit,
 #     cable.cable_5c2v,

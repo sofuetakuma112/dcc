@@ -2,24 +2,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import cmath
-import tqdm
+from tqdm import tqdm
 import util
-import cables
+import cable
 
-
+# LCフィルタのF行列を生成する
 def createFMatrixLC(frequency_Hz, cableInfo):
-    L = 1.31 * 10 ** -7 * cableInfo["length"]  # H/m * m
-    C_FperM = cableInfo["capacitance"] * 10 ** -12 * cableInfo["length"]  # F/m * m
+    L = cableInfo.inductance  # H/m
+    C = cableInfo.capacitance  # F/m
     omega = 2 * np.pi * frequency_Hz
 
     return np.array(
         [
-            [1 - omega ** 2 * L * C_FperM, 1j * omega * L],
-            [1j * omega * C_FperM, 1],
+            [1 - omega ** 2 * L * C, 1j * omega * L],
+            [1j * omega * C, 1],
         ]
     )
 
 
+# TODO: cableInfoのインスタンス化に対応する
 def createFMatrixLCByMatmul(frequency_Hz, cableInfo):
     L = 1.31 * 10 ** -7  # H/m
     C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
@@ -44,6 +45,7 @@ def createTransferFunction(frequency_Hz, resistance, cableInfo):
     return util.createTransferFunctionFromFMatrix(resistance, f_matrix_lc)
 
 
+# TODO: cableInfoのインスタンス化に対応する
 def createTransferFunctionByContinuousLCCircuit(frequency_Hz, resistance, cableInfo):
     # LのF行列とCのF行列の行列積
     f_matrix_lc = createFMatrixLCByMatmul(frequency_Hz, cableInfo)
@@ -54,32 +56,24 @@ def createTransferFunctionByContinuousLCCircuit(frequency_Hz, resistance, cableI
 # 解析的に求めたLCフィルタの伝達関数の式を用いて計算する
 def calcTfByEquation(frequency_Hz, resistance, cableInfo):
     # 受端のインピーダンス
-    R = resistance  # (Ω)
-    L = 1.31 * 10 ** -7  # H/m
-    C_FperM = cableInfo["capacitance"] * 10 ** -12  # F/m
+    Zr = resistance  # (Ω)
+    L = cableInfo.inductance  # H/m
+    C = cableInfo.capacitance  # F/m
 
     # LCフィルタの伝達関数(https://detail-infomation.com/lc-low-pass-filter/)
     omega = 2 * np.pi * frequency_Hz
 
-    return R / (R * (1 - (omega ** 2) * L * C_FperM) + 1j * omega * L)
-
-
-# frequencies_Hz = range(0, 200 * 10 ** 6, 10000)
-frequencies_Hz = list(range(0, 1000, 1))
-frequencies_Hz.extend(list(range(1000, 200 * 10 ** 6, 1000)))
-# resistances = [5, 50, 1000000]
-resistances = [50]
-times = 1
+    return Zr / (Zr * (1 - (omega ** 2) * L * C) + 1j * omega * L)
 
 
 def drawFrequencyResponse(calcTransferFunction, cableInfo, outputFileName=""):
-    fig, axes = plt.subplots(1, 2)
+    fig, axes = plt.subplots(1, 2 * len(resistances))
     tfs_nthPwrOf10 = []
 
     for i, resistance in enumerate(resistances):
         tfs = []
 
-        for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+        for frequency_Hz in tqdm(frequencies_Hz, leave=False):
             tf = calcTransferFunction(
                 frequency_Hz,
                 resistance,
@@ -95,23 +89,26 @@ def drawFrequencyResponse(calcTransferFunction, cableInfo, outputFileName=""):
         print(f"slope: {slope}[dB/dec]")
 
         # 伝達関数G(f)にabs関数を適用してゲインを求める
-        axes[0].plot(
+        axes[i * 2].plot(
             frequencies_Hz,
             list(map(util.convertGain2dB, tfs)),
         )
-        axes[0].set_title(f"R = {resistance}")
-        axes[0].set_xlabel("frequency [Hz]")
-        axes[0].set_ylabel("Gain [dB]")
-        axes[0].set_xscale("log")
+        axes[i * 2].set_title(f"R = {resistance}")
+        axes[i * 2].set_xlabel("frequency [Hz]")
+        axes[i * 2].set_ylabel("Gain [dB]")
+        axes[i * 2].set_xscale("log")
 
-        axes[1].plot(
+        # math.atan2(y, x)の戻り値は-piからpi（-180度から180度）の間
+        # 第2象限、第3象限での角度も正しく取得できるので、
+        # 極座標平面で考える場合はmath.atan()よりもmath.atan2()のほうが適当
+        axes[i * 2 + 1].plot(
             frequencies_Hz,
-            list(map(lambda tf: math.atan(tf.imag / tf.real) * 180 / np.pi, tfs)),
+            list(map(lambda tf: math.atan2(tf.imag, tf.real) * 180 / np.pi, tfs)),
         )
-        axes[1].set_title(f"R = {resistance}")
-        axes[1].set_xlabel("frequency [Hz]")
-        axes[1].set_ylabel("theta [rad]")
-        axes[1].set_xscale("log")
+        axes[i * 2 + 1].set_title(f"R = {resistance}")
+        axes[i * 2 + 1].set_xlabel("frequency [Hz]")
+        axes[i * 2 + 1].set_ylabel("theta [degree]")
+        axes[i * 2 + 1].set_xscale("log")
 
     if outputFileName != "":
         fig.savefig(f"{outputFileName}.png")
@@ -123,7 +120,7 @@ def drawFParameter(cableInfo, outputFileName=""):
     f_matrix_list = []
 
     fig, axes = plt.subplots(1, 2)
-    for frequency_Hz in tqdm.tqdm(frequencies_Hz):
+    for frequency_Hz in tqdm(frequencies_Hz):
         f_matrix = createFMatrixLCByMatmul(
             frequency_Hz,
             cableInfo,
@@ -153,12 +150,29 @@ def drawFParameter(cableInfo, outputFileName=""):
     plt.show()
 
 
-# drawFrequencyResponse(calcTfByEquation, cable.cable_5c2v, "calc_by_tf_equation")
-drawFrequencyResponse(createTransferFunction, cables.cable_5c2v)
+cable_vertual = cable.Cable(
+    resistance=0,
+    inductance=1e-2,
+    conductance=0,
+    capacitance=1e-4,
+    length=0,
+)
+
+# frequencies_Hz = range(0, 200 * 10 ** 6, 10000)
+frequencies_Hz = list(range(0, 1000, 1))
+frequencies_Hz.extend(list(range(1000, 2 * 10 ** 6, 1000)))
+# resistances = [5, 50, 1000000]
+resistances = [50]
+times = 1
+
+# drawFrequencyResponse(calcTfByEquation, cable_vertual)
+drawFrequencyResponse(createTransferFunction, cable_vertual)
 # drawFrequencyResponse(
 #     createTransferFunctionByContinuousLCCircuit,
-#     cable.cable_5c2v,
+#     cable_vertual,
 #     f"calc_by_{times}_consective_LC_circuits_fMatrix",
 # )
 
-# drawFParameter(cable.cable_5c2v)
+# print(1 / (2 * np.pi * ))
+
+# drawFParameter(cable_vertual)

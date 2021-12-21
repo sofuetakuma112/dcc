@@ -254,10 +254,10 @@ def squareWaveFftAndIfft():
     axes[0].set_ylabel("Gain")
 
     # フーリエ変換
-    fft_data_list = np.fft.rfft(inputWaves_time)
+    fft_data_list = np.fft.fft(inputWaves_time)
     # 離散フーリエ変換のサンプル周波数を返す（rfft, irfftで使用するため）
     # np.fft.fftfreq(ウィンドウの長さ, サンプリングレートの逆数)
-    freqList = np.fft.rfftfreq(len(inputWaves_time), 1.0 / rate)
+    freqList = np.fft.fftfreq(len(inputWaves_time), 1.0 / rate)
     axes[1].plot(freqList, np.abs(fft_data_list))
     axes[1].set_title("Fourier spectrum (F[input(t)])")
     axes[1].set_xlabel("Frequency")

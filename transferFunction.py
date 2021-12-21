@@ -190,45 +190,9 @@ frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 #     cable_noLoss_vertual,
 # )
 
+
 def testFftAndIfft():
     # 正弦波のデータ作成
-    f = 1000
-    rate = 44100
-    T = np.arange(0, 0.01, 1 / rate)
-    s = []
-    for t in T:
-        v = np.sin(2 * np.pi * f * t)
-        s.append(v)
-
-    fig, axes = plt.subplots(1, 3)
-
-    axes[0].plot(T, s)
-    axes[0].set_xlabel("Time")
-    axes[0].set_ylabel("Gain")
-
-    # フーリエ変換
-    # rfft: 実数?入力に対して1次元離散フーリエ変換を計算する
-    fft_data = np.abs(np.fft.rfft(s))
-
-    # rfftfreq: 離散フーリエ変換のサンプル周波数を返す(rfft, irfftで使用するため)。
-    freqList = np.fft.rfftfreq(len(s), 1.0 / rate)  # 横軸
-
-    # loglog: X 軸と Y 軸の両方に沿って対数スケーリングを行う
-    axes[1].loglog(freqList, 10 * np.log(fft_data))
-
-    axes[1].set_xlabel("Frequency")
-    axes[1].set_ylabel("Power")
-
-    # 逆フーリエ変換
-    # 位相は考慮されていないため余弦波になる
-    r = np.fft.irfft(fft_data, len(T))
-    axes[2].plot(T, r)
-    axes[2].set_xlabel("Time")
-    axes[2].set_ylabel("Gain")
-
-    plt.show()
-
-def squareWaveFftAndIfft():
     f = 1000
     rate = 44100
     T = np.arange(0, 0.01, 1 / rate)
@@ -244,31 +208,96 @@ def squareWaveFftAndIfft():
     axes[0].set_ylabel("Gain")
 
     # フーリエ変換
-    fft_data_list = np.abs(np.fft.rfft(s))
-    # 0を1e-6に置き換える
-    fft_data_replaced_zero_list = [1e-6 if fft_data == 0 else fft_data for fft_data in fft_data_list]
-    freqList = np.fft.rfftfreq(len(s), 1.0 / rate)  # 横軸
-    axes[1].loglog(freqList, 10 * np.log(fft_data_replaced_zero_list))
+    # rfft: 実数?入力に対して1次元離散フーリエ変換を計算する
+    fft_data = np.fft.fft(s)
+
+    # 正規化 + 交流成分2倍
+    # F = fft_data / (N / 2)
+    # F[0] = F[0] / 2
+
+    # rfftfreq: 離散フーリエ変換のサンプル周波数を返す(rfft, irfftで使用するため)。
+    freqList = np.fft.fftfreq(len(s), 1.0 / rate)  # 横軸
+
+    axes[1].plot(freqList, abs(fft_data))
+
     axes[1].set_xlabel("Frequency")
     axes[1].set_ylabel("Power")
 
     # 逆フーリエ変換
-    r = np.fft.irfft(fft_data_list, len(T))
-    axes[2].plot(T, r)
+    # 位相は考慮されていないため余弦波になる
+    r = np.fft.ifft(fft_data, len(T))
+    axes[2].plot(T, np.real(r))
     axes[2].set_xlabel("Time")
     axes[2].set_ylabel("Gain")
 
     plt.show()
-    
-    # # 矩形波を生成
-    # times_in = np.linspace(0, 10, Len)  # 時刻配列(0 ~ 10を1024分割したリスト)
-    # freq = 1 * 10 ** 0  # 矩形波の周波数
-    # amp = 1.0  # 矩形波の振幅
-    # squareWaves = np.sign(amp * np.sin(2 * np.pi * freq * times_in))
 
-    # # 矩形波をフーリエ変換
-    # # fft: 一次元離散フーリエ変換を計算する
-    # squareWaves_fft = np.fft.fft(squareWaves)  # len(fk.shape) => (Len,)
+
+def squareWaveFftAndIfft():
+    f = 1000
+    rate = 44100
+    # 方形波
+    T = np.arange(0, 0.01, 1 / rate)  # len(T) => 441
+    squareWaves_time = np.sign(np.sin(2 * np.pi * f * T))
+    inputWaves_time = squareWaves_time
+    # sinc関数
+    # T = np.linspace(-10, 10, 1000)
+    # sincWaves_time = np.sinc(T)
+    # inputWaves_time = sincWaves_time
+
+    fig, axes = plt.subplots(3, 2)
+    axes = axes.flatten()
+
+    axes[0].plot(T, inputWaves_time)
+    axes[0].set_title("input(t)")
+    axes[0].set_xlabel("Time")
+    axes[0].set_ylabel("Gain")
+
+    # フーリエ変換
+    fft_data_list = np.fft.rfft(inputWaves_time)
+    # 離散フーリエ変換のサンプル周波数を返す（rfft, irfftで使用するため）
+    # np.fft.fftfreq(ウィンドウの長さ, サンプリングレートの逆数)
+    freqList = np.fft.rfftfreq(len(inputWaves_time), 1.0 / rate)
+    axes[1].plot(freqList, np.abs(fft_data_list))
+    axes[1].set_title("Fourier spectrum (F[input(t)])")
+    axes[1].set_xlabel("Frequency")
+    axes[1].set_ylabel("Power")
+    # axes[1].set_xlim(-1000, 1000)
+
+    tfs = calcTfsBySomeFreqs(
+        freqList, {"shouldMatching": False, "impedance": 1e-6}, cable_noLoss_vertual
+    )
+
+    axes[2].plot(freqList, list(map(lambda tf: abs(tf), tfs)))
+    axes[2].set_title("transfer function (|H(f)|)")
+    axes[2].set_xlabel("Frequency")
+    axes[2].set_ylabel("Gain [dB]")
+    # axes[2].set_yscale("log")
+
+    # convolution = np.array(fft_data_list, dtype=np.complex) * np.array(
+    #     tfs, dtype=np.complex
+    # )
+    convolution = np.array(fft_data_list, dtype=np.complex) * np.array(
+        list(map(lambda tf: abs(tf), tfs)), dtype=np.complex
+    )
+
+    # 入力波形のフーリエ変換 * 伝達関数
+    axes[3].plot(freqList, np.abs(convolution))
+    axes[3].set_title("Fourier spectrum (F[input(t)] * |H(f)|)")
+    axes[3].set_xlabel("Frequency")
+    axes[3].set_ylabel("Power")
+    # axes[3].set_xlim(-1000, 1000)
+
+    # 逆フーリエ変換
+    r = np.fft.ifft(convolution, len(T))
+    axes[4].plot(T, np.real(r))
+    axes[4].set_title("output(t)")
+    axes[4].set_xlabel("Time")
+    axes[4].set_ylabel("Gain")
+
+    plt.tight_layout()
+    plt.show()
+
 
 # testFftAndIfft()
 squareWaveFftAndIfft()

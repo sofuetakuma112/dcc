@@ -7,10 +7,11 @@ import numpy as np
 from tqdm import tqdm
 
 import cable
+from snippet import drawFrequencyResponse
 import util
 
-warnings.resetwarnings()
-warnings.simplefilter("error")
+# warnings.resetwarnings()
+# warnings.simplefilter("error")
 
 
 def calculateTheta(frequency_Hz, cable):
@@ -89,9 +90,9 @@ def createTransferFunction(frequency_Hz, endCondition, cable):
     return util.createTransferFunctionFromFMatrix(endImpedance, f_matrix_dcc)
 
 
-def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
+def drawBodePlot(frequencies_Hz, endCondition, cable, fileName=""):
     """
-    分布定数線路の周波数特性をグラフに表示する
+    分布定数線路のボード線図をグラフに表示する
 
     Parameters
     ----------
@@ -109,7 +110,6 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
     tfs_nthPwrOf10 = []
     # 周波数ごとに伝達関数を求める
     for frequency_Hz in tqdm(frequencies_Hz, leave=False):
-        #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
         tf = createTransferFunction(frequency_Hz, endCondition, cable)
         tfs.append(tf)
 
@@ -124,14 +124,13 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
     fig, axes = plt.subplots(1, 2)
     axes[0].plot(
         frequencies_Hz,
-        # list(map(util.convertGain2dB, tfs)),
-        list(map(lambda tf: abs(tf), tfs)),
+        list(map(util.convertGain2dB, tfs)),
     )
     axes[0].set_xlabel("frequency [Hz]")
-    # axes[0].set_ylabel("Gain [dB]")
-    # axes[0].set_xscale("log")
-    axes[0].set_yscale("log")
-    # axes[0].set_yticks([-5, 0, 5])
+    axes[0].set_ylabel("Gain [dB]")
+    axes[0].set_xscale("log")
+    if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
+        axes[0].set_ylim(-5, 5)
 
     axes[1].plot(
         frequencies_Hz,
@@ -143,6 +142,63 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
 
     if fileName != "":
         fig.savefig(f"{fileName}")
+    plt.show()
+
+
+def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
+    """
+    分布定数線路の周波数特性をグラフに表示する
+
+    Parameters
+    ----------
+    frequencies_Hz : list
+        周波数(Hz)のリスト
+    endCondition: dict
+        受電端の抵抗の条件
+    cable : instance
+        Cableクラスのインスタンス
+    fileName: string
+        表示するグラフを保存する際のファイル名
+    """
+
+    conditions = [
+        {"shouldMatching": True, "impedance": 0},
+        {"shouldMatching": False, "impedance": 1e6},
+        {"shouldMatching": False, "impedance": 1e-6},
+    ]
+    fig, axes = plt.subplots(1, 3)
+    for (i, condition) in enumerate(conditions):
+        tfs = []
+        for frequency_Hz in tqdm(frequencies_Hz, leave=False):
+            tf = createTransferFunction(frequency_Hz, condition, cable)
+            tfs.append(tf)
+
+        axes[i].plot(
+            frequencies_Hz,
+            list(map(lambda tf: abs(tf), tfs)),
+            # list(map(util.convertGain2dB, tfs)),
+        )
+        text = (
+            "matching"
+            if condition["shouldMatching"]
+            else "open"
+            if condition["impedance"] >= 1e6
+            else "short"
+        )
+        axes[i].set_title(f"{text}")
+        axes[i].set_ylabel("|H(f)|")
+        axes[i].set_xlabel("frequency [Hz]")
+        axes[i].set_yscale("log")
+        axes[i].ticklabel_format(style="sci",  axis="x",scilimits=(0,0))
+        if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
+            axes[i].set_ylim(1e-1, 1e3)
+
+    if fileName != "":
+        fig.savefig(f"{fileName}")
+
+    plt.subplots_adjust(
+        left=0.0625, bottom=0.1, right=0.98, top=0.9, wspace=0.2, hspace=0.35
+    )
     plt.show()
 
 
@@ -179,65 +235,29 @@ cable_noLoss_vertual = cable.Cable(
 # ケーブルの周波数特性をグラフにする
 frequencies_Hz = list(range(0, 10000, 10))
 frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
-# drawFrequencyResponse(
+# drawBodePlot(
 #     np.logspace(4, 6, 1000, base=10),
 #     {"shouldMatching": False, "impedance": 1e6},
 #     cable_vertual,
 # )
-# drawFrequencyResponse(
+# drawBodePlot(
 #     np.logspace(4, 6, 1000, base=10),
-#     {"shouldMatching": False, "impedance": 1e6},
+#     {"shouldMatching": True, "impedance": 1e6},
 #     cable_noLoss_vertual,
 # )
 
-
-def testFftAndIfft():
-    # 正弦波のデータ作成
-    f = 1000
-    rate = 44100
-    T = np.arange(0, 0.01, 1 / rate)
-    s = []
-    for t in T:
-        v = np.sign(np.sin(2 * np.pi * f * t))
-        s.append(v)
-
-    fig, axes = plt.subplots(1, 3)
-
-    axes[0].plot(T, s)
-    axes[0].set_xlabel("Time")
-    axes[0].set_ylabel("Gain")
-
-    # フーリエ変換
-    # rfft: 実数?入力に対して1次元離散フーリエ変換を計算する
-    fft_data = np.fft.fft(s)
-
-    # 正規化 + 交流成分2倍
-    # F = fft_data / (N / 2)
-    # F[0] = F[0] / 2
-
-    # rfftfreq: 離散フーリエ変換のサンプル周波数を返す(rfft, irfftで使用するため)。
-    freqList = np.fft.fftfreq(len(s), 1.0 / rate)  # 横軸
-
-    axes[1].plot(freqList, abs(fft_data))
-
-    axes[1].set_xlabel("Frequency")
-    axes[1].set_ylabel("Power")
-
-    # 逆フーリエ変換
-    # 位相は考慮されていないため余弦波になる
-    r = np.fft.ifft(fft_data, len(T))
-    axes[2].plot(T, np.real(r))
-    axes[2].set_xlabel("Time")
-    axes[2].set_ylabel("Gain")
-
-    plt.show()
+drawFrequencyResponse(
+    np.logspace(4, 6, 1000, base=10),
+    {"shouldMatching": True, "impedance": 1e6},
+    cable_noLoss_vertual,
+)
 
 
 def squareWaveFftAndIfft():
     f = 1000
-    rate = 44100
+    rate = 44100  # サンプリング周波数（ナイキスト周波数は44100 / 2）
     # 方形波
-    T = np.arange(0, 0.01, 1 / rate)  # len(T) => 441
+    T = np.arange(0, 0.01, 1 / rate)  # len(T) => 441, 1 / rate はサンプリング周期
     squareWaves_time = np.sign(np.sin(2 * np.pi * f * T))
     inputWaves_time = squareWaves_time
     # sinc関数
@@ -254,43 +274,60 @@ def squareWaveFftAndIfft():
     axes[0].set_ylabel("Gain")
 
     # フーリエ変換
-    fft_data_list = np.fft.fft(inputWaves_time)
+    # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
+    # inputWaves_fft = np.fft.fft(inputWaves_time)
+    inputWaves_fft = np.fft.rfft(inputWaves_time)
+
     # 離散フーリエ変換のサンプル周波数を返す（rfft, irfftで使用するため）
     # np.fft.fftfreq(ウィンドウの長さ, サンプリングレートの逆数)
-    freqList = np.fft.fftfreq(len(inputWaves_time), 1.0 / rate)
-    axes[1].plot(freqList, np.abs(fft_data_list))
-    axes[1].set_title("Fourier spectrum (F[input(t)])")
+    # frequencies = np.fft.fftfreq(len(inputWaves_time), 1.0 / rate)
+    frequencies = np.fft.rfftfreq(len(inputWaves_time), 1.0 / rate)
+
+    axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
+    axes[1].set_title("abs(F[input(t)])")
     axes[1].set_xlabel("Frequency")
     axes[1].set_ylabel("Power")
-    # axes[1].set_xlim(-1000, 1000)
 
     tfs = calcTfsBySomeFreqs(
-        freqList, {"shouldMatching": False, "impedance": 1e-6}, cable_noLoss_vertual
+        frequencies,
+        {"shouldMatching": True, "impedance": 1e6},
+        cable.Cable(
+            resistance=0,
+            # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
+            inductance=100e-12 * 50 ** 2,
+            conductance=0,
+            capacitance=100e-12,
+            length=1000,
+        ),
     )
 
-    axes[2].plot(freqList, list(map(lambda tf: abs(tf), tfs)))
-    axes[2].set_title("transfer function (|H(f)|)")
+    axes[2].plot(frequencies, list(map(lambda tf: abs(tf), tfs)))
+    axes[2].set_title("|H(f)|")
     axes[2].set_xlabel("Frequency")
     axes[2].set_ylabel("Gain [dB]")
     # axes[2].set_yscale("log")
 
-    # convolution = np.array(fft_data_list, dtype=np.complex) * np.array(
-    #     tfs, dtype=np.complex
-    # )
-    convolution = np.array(fft_data_list, dtype=np.complex) * np.array(
-        list(map(lambda tf: abs(tf), tfs)), dtype=np.complex
+    # convolution = []
+    # for (fft_data, tf) in zip(inputWaves_fft, tfs):
+    #     convolution.append(fft_data * tf)
+    convolution = np.array(inputWaves_fft, dtype=np.complex) * np.array(
+        tfs, dtype=np.complex
     )
+    # convolution = np.array(inputWaves_fft, dtype=np.complex) * np.array(
+    #     list(map(lambda tf: abs(tf), tfs)), dtype=np.complex
+    # )
 
     # 入力波形のフーリエ変換 * 伝達関数
-    axes[3].plot(freqList, np.abs(convolution))
-    axes[3].set_title("Fourier spectrum (F[input(t)] * |H(f)|)")
+    axes[3].plot(frequencies, np.abs(convolution))  # absで振幅を取得
+    axes[3].set_title("abs(F[input(t)] * H(f))")
     axes[3].set_xlabel("Frequency")
     axes[3].set_ylabel("Power")
-    # axes[3].set_xlim(-1000, 1000)
 
     # 逆フーリエ変換
-    r = np.fft.ifft(convolution, len(T))
-    axes[4].plot(T, np.real(r))
+    # r = np.fft.ifft(convolution, len(T))
+    #  irfft: 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
+    r = np.fft.irfft(convolution, len(T))
+    axes[4].plot(T, r)
     axes[4].set_title("output(t)")
     axes[4].set_xlabel("Time")
     axes[4].set_ylabel("Gain")
@@ -299,5 +336,4 @@ def squareWaveFftAndIfft():
     plt.show()
 
 
-# testFftAndIfft()
-squareWaveFftAndIfft()
+# squareWaveFftAndIfft()

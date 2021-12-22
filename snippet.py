@@ -7,6 +7,7 @@
 # except OverflowError:
 #     sinh = 1e6 * 1j * 1e6
 
+
 def calculateTheta(cableLength, frequency, alphas):
     """
     伝搬定数γと同軸ケーブルの長さlの積を求める
@@ -292,6 +293,7 @@ def calculateInputImpedanceByFMatrix(Zr, frequency_Hz, cable):
 
     return f_matrix[0, 0] / f_matrix[1, 0]
 
+
 def createFMatrixForDcc(cableInfo, theta):
     """
     分布定数回路のF行列を求める
@@ -492,6 +494,7 @@ def drawFrequencyResponseBySomeConditions(resistances, conductances, mode="r"):
 
     plt.show()
 
+
 # 軽量版
 def drawFrequencyResponseBySomeConditions(resistances, conductances, mode="r"):
     # すべてのR, Gの組み合わせで描画する
@@ -644,3 +647,127 @@ frequencies_test_Hz = list(range(0, 10000, 10))
 frequencies_test_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 # drawImpedance(frequencies_test_Hz, cable_vertual)
 # drawImpedance(frequencies_test_Hz, cable_noLoss_vertual)
+
+
+def testFftAndIfft():
+    # 正弦波のデータ作成
+    f = 1000
+    rate = 44100
+    T = np.arange(0, 0.01, 1 / rate)
+    s = []
+    for t in T:
+        v = np.sign(np.sin(2 * np.pi * f * t))
+        s.append(v)
+
+    fig, axes = plt.subplots(1, 3)
+
+    axes[0].plot(T, s)
+    axes[0].set_xlabel("Time")
+    axes[0].set_ylabel("Gain")
+
+    # フーリエ変換
+    # rfft: 実数?入力に対して1次元離散フーリエ変換を計算する
+    fft_data = np.fft.fft(s)
+
+    # 正規化 + 交流成分2倍
+    # F = fft_data / (N / 2)
+    # F[0] = F[0] / 2
+
+    # rfftfreq: 離散フーリエ変換のサンプル周波数を返す(rfft, irfftで使用するため)。
+    frequencies = np.fft.fftfreq(len(s), 1.0 / rate)  # 横軸
+
+    axes[1].plot(frequencies, abs(fft_data))
+
+    axes[1].set_xlabel("Frequency")
+    axes[1].set_ylabel("Power")
+
+    # 逆フーリエ変換
+    # 位相は考慮されていないため余弦波になる
+    r = np.fft.ifft(fft_data, len(T))
+    axes[2].plot(T, np.real(r))
+    axes[2].set_xlabel("Time")
+    axes[2].set_ylabel("Gain")
+
+    plt.show()
+
+
+def squareWaveFftAndIfft(cable):
+    f = 1000
+    rate = 44100  # サンプリング周波数
+    # 方形波
+    times = np.arange(0, 0.01, 1 / rate)  # len(times) => 441, 1 / rate はサンプリング周期
+    squareWaves_time = np.sign(np.sin(2 * np.pi * f * times))
+    inputWaves_time = squareWaves_time
+    # sinc関数
+    # times = np.linspace(-10, 10, 1000)
+    # sincWaves_time = np.sinc(times)
+    # inputWaves_time = sincWaves_time
+
+    fig, axes = plt.subplots(3, 2)
+    axes = axes.flatten()
+
+    axes[0].plot(times, inputWaves_time)
+    axes[0].set_title("input(t)")
+    axes[0].set_xlabel("Time")
+    axes[0].set_ylabel("Gain")
+
+    # フーリエ変換
+    # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
+    ffts = np.fft.fft(inputWaves_time)
+    # ffts = np.fft.rfft(inputWaves_time)
+    ffts_norm = ffts / (len(times) / 2)  # 正規化
+
+    # 離散フーリエ変換のサンプル周波数を返す（rfft, irfftで使用するため）
+    # np.fft.fftfreq(ウィンドウの長さ, サンプリングレートの逆数)
+    frequencies = np.fft.fftfreq(len(inputWaves_time), 1.0 / rate)
+    # frequencies = np.fft.rfftfreq(len(inputWaves_time), 1.0 / rate)
+    frequencies_pos = frequencies[1 : int(len(times) / 2)]
+
+    amp = np.abs(ffts_norm)  # 絶対値を取ると振幅になる
+    axes[1].plot(frequencies_pos, amp[1 : int(len(times) / 2)])
+    # axes[1].plot(frequencies_pos, list(map(lambda x: x.real, ffts_norm)))
+    # axes[1].plot(frequencies_pos, list(map(lambda x: x.imag, ffts_norm)))
+    axes[1].set_title("Fourier spectrum (F[input(t)])")
+    axes[1].set_xlabel("Frequency")
+    axes[1].set_ylabel("Power")
+    # axes[1].set_xlim(-1000, 1000)
+
+    tfs = calcTfsBySomeFreqs(
+        frequencies_pos, {"shouldMatching": True, "impedance": 1e-6}, cable
+    )
+
+    axes[2].plot(frequencies_pos, np.abs(tfs))
+    axes[2].set_title("transfer function (abs(H(f)))")
+    axes[2].set_xlabel("Frequency")
+    axes[2].set_ylabel("|H(f)|")
+    # axes[2].set_yscale("log")
+
+    # convolution = []
+    # for (fft_data, tf) in zip(ffts_norm, tfs):
+    #     convolution.append(fft_data * tf)
+    convolution = np.array(
+        ffts_norm[1 : int(len(times) / 2)], dtype=np.complex
+    ) * np.array(tfs, dtype=np.complex)
+    # convolution = np.array(ffts_norm, dtype=np.complex) * np.array(
+    #     list(map(lambda tf: abs(tf), tfs)), dtype=np.complex
+    # )
+
+    # 入力波形のフーリエ変換 * 伝達関数
+    axes[3].plot(frequencies_pos, np.abs(convolution))  # システムの出力波形をフーリエ変換したもの
+    # axes[3].plot(frequencies_pos, list(map(lambda x: x.real, convolution)))
+    # axes[3].plot(frequencies_pos, list(map(lambda x: x.imag, convolution)))
+    axes[3].set_title("Fourier spectrum (abs(F[input(t)] * H(f)))")
+    axes[3].set_xlabel("Frequency")
+    axes[3].set_ylabel("Power")
+    # axes[3].set_xlim(-1000, 1000)
+
+    # 逆フーリエ変換
+    r = np.fft.ifft(convolution, len(times))
+    # r = np.fft.irfft(convolution, len(times))
+    axes[4].plot(times, np.real(r * len(times)))
+    axes[4].set_title("output(t)")
+    axes[4].set_xlabel("Time")
+    axes[4].set_ylabel("Gain")
+
+    plt.tight_layout()
+    plt.show()

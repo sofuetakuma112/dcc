@@ -246,11 +246,11 @@ frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 #     cable_noLoss_vertual,
 # )
 
-drawFrequencyResponse(
-    np.logspace(4, 6, 1000, base=10),
-    {"shouldMatching": True, "impedance": 1e6},
-    cable_noLoss_vertual,
-)
+# drawFrequencyResponse(
+#     np.logspace(4, 6, 1000, base=10),
+#     {"shouldMatching": True, "impedance": 1e6},
+#     cable_noLoss_vertual,
+# )
 
 
 def squareWaveFftAndIfft():
@@ -307,9 +307,6 @@ def squareWaveFftAndIfft():
     axes[2].set_ylabel("Gain [dB]")
     # axes[2].set_yscale("log")
 
-    # convolution = []
-    # for (fft_data, tf) in zip(inputWaves_fft, tfs):
-    #     convolution.append(fft_data * tf)
     convolution = np.array(inputWaves_fft, dtype=np.complex) * np.array(
         tfs, dtype=np.complex
     )
@@ -326,14 +323,21 @@ def squareWaveFftAndIfft():
     # 逆フーリエ変換
     # r = np.fft.ifft(convolution, len(T))
     #  irfft: 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
+    # 入力波形が実数値のみなので、出力波形も虚数部分は捨ててよい？
     r = np.fft.irfft(convolution, len(T))
-    axes[4].plot(T, r)
-    axes[4].set_title("output(t)")
+    axes[4].plot(T, np.real(r))
+    axes[4].set_title("output(t).real")
     axes[4].set_xlabel("Time")
     axes[4].set_ylabel("Gain")
+
+    r = np.fft.irfft(convolution, len(T))
+    axes[5].plot(T, np.imag(r))
+    axes[5].set_title("output(t).imag")
+    axes[5].set_xlabel("Time")
+    axes[5].set_ylabel("Gain")
 
     plt.tight_layout()
     plt.show()
 
 
-# squareWaveFftAndIfft()
+squareWaveFftAndIfft()

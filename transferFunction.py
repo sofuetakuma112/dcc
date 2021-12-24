@@ -259,6 +259,21 @@ def squareWaveFftAndIfft():
     # 方形波
     T = np.arange(0, 0.01, 1 / rate)  # len(T) => 441, 1 / rate はサンプリング周期
     squareWaves_time = np.sign(np.sin(2 * np.pi * f * T))
+    prevIndex = 0
+    indexChunk = []
+    chunks = []
+    for index, discreteValue in enumerate(squareWaves_time):
+        if discreteValue == 1:
+            if prevIndex + 1 == index:
+                # 同じ-1の塊に現在いる
+                indexChunk.append(index)
+            else:
+                # 次の-1の塊に移動した
+                chunks.append(indexChunk)
+                indexChunk = []
+            prevIndex = index
+
+    print(chunks)
     inputWaves_time = squareWaves_time
     # sinc関数
     # T = np.linspace(-10, 10, 1000)

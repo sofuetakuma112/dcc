@@ -56,11 +56,12 @@ def createImagePath(fileName=""):
     todayDirectoryName = f"{year}_{month}_{day}"
     imageFileName = randomname(12) if fileName == "" else fileName
 
-    if not os.path.exists(f"img/${todayDirectoryName}"):
+    if not os.path.exists(f"img/{todayDirectoryName}"):
         # ディレクトリが存在しない場合、ディレクトリを作成する
         os.makedirs(f"img/{todayDirectoryName}")
 
     image_file_path = f"img/{todayDirectoryName}/{imageFileName}"
+    print(image_file_path)
     return image_file_path
 
 

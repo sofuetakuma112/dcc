@@ -2,7 +2,11 @@ import cmath
 import math
 import math
 
+import matplotlib
+
+matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
+
 import numpy as np
 from tqdm import tqdm
 
@@ -190,9 +194,11 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         {"shouldMatching": False, "impedance": 1e6},
         {"shouldMatching": False, "impedance": 1e-6},
     ]
-    fig, axes = plt.subplots(1, 3)
+    # fig, axes = plt.subplots(1, 3)
     for (i, condition) in enumerate(conditions):
-        # fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
+        axes = [ax, ax, ax]
+
         tfs = []
         for frequency_Hz in tqdm(frequencies_Hz, leave=False):
             tf = createTransferFunction(frequency_Hz, condition, cable)
@@ -212,6 +218,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                 ),
                 marker="v",
                 color="blue",
+                linestyle="",
             )
             axes[i].plot(
                 antiresonance_freqs_open,
@@ -223,7 +230,9 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                 ),
                 marker="o",
                 color="red",
+                linestyle="",
             )
+            axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         elif i == 2:
             # short
             axes[i].plot(
@@ -235,18 +244,23 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                 ),
                 marker="v",
                 color="blue",
+                linestyle="",
             )
             axes[i].plot(
                 antiresonance_freqs_short[1:],
                 list(
                     map(
                         abs,
-                        calcTfsBySomeFreqs(antiresonance_freqs_short[1:], condition, cable),
+                        calcTfsBySomeFreqs(
+                            antiresonance_freqs_short[1:], condition, cable
+                        ),
                     )
                 ),
                 marker="o",
                 color="red",
+                linestyle="",
             )
+            axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         text = (
             "matching"
             if condition["shouldMatching"]
@@ -263,7 +277,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             axes[i].set_ylim(1e-1, 1e3)
 
     if fileName != "":
-        fig.savefig(f"{fileName}")
+        fig.savefig(util.createImagePath(fileName))
 
     plt.subplots_adjust(
         left=0.0625, bottom=0.1, right=0.98, top=0.9, wspace=0.2, hspace=0.35

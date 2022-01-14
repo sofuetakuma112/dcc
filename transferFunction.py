@@ -1,6 +1,6 @@
 import cmath
 import math
-import warnings
+import math
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,9 +9,6 @@ from tqdm import tqdm
 import cable
 from snippet import drawFrequencyResponse
 import util
-
-# warnings.resetwarnings()
-# warnings.simplefilter("error")
 
 
 def calculateTheta(frequency_Hz, cable):
@@ -145,7 +142,7 @@ def drawBodePlot(frequencies_Hz, endCondition, cable, fileName=""):
     plt.show()
 
 
-def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
+def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     """
     分布定数線路の周波数特性をグラフに表示する
 
@@ -161,6 +158,33 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
         表示するグラフを保存する際のファイル名
     """
 
+    # open
+    # 共振周波数の分母
+    resonance_denominator_open = (
+        2 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
+    )
+    # 反共振周波数の分母
+    antiresonance_denominator_open = (
+        4 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
+    )
+
+    # 開放
+    resonance_freqs_open = []  # 共振周波数
+    antiresonance_freqs_open = []  # 反共振周波数
+    # 整数n
+    n_length = range(10)
+    for n in n_length:
+        # 共振周波数
+        resonance_freq_open = n / resonance_denominator_open
+        resonance_freqs_open.append(resonance_freq_open)
+        # 反共振周波数
+        antiresonance_freq_open = (2 * n + 1) / antiresonance_denominator_open
+        antiresonance_freqs_open.append(antiresonance_freq_open)
+    # 引数のfrequencies_Hzに一番近い
+    # 短絡
+    resonance_freqs_short = antiresonance_freqs_open  # 共振周波数
+    antiresonance_freqs_short = resonance_freqs_open  # 反共振周波数
+
     conditions = [
         {"shouldMatching": True, "impedance": 0},
         {"shouldMatching": False, "impedance": 1e6},
@@ -168,6 +192,7 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
     ]
     fig, axes = plt.subplots(1, 3)
     for (i, condition) in enumerate(conditions):
+        # fig, ax = plt.subplots()
         tfs = []
         for frequency_Hz in tqdm(frequencies_Hz, leave=False):
             tf = createTransferFunction(frequency_Hz, condition, cable)
@@ -175,9 +200,53 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
 
         axes[i].plot(
             frequencies_Hz,
-            list(map(lambda tf: abs(tf), tfs)),
+            list(map(abs, tfs)),
             # list(map(util.convertGain2dB, tfs)),
         )
+        if i == 1:
+            # open
+            axes[i].plot(
+                resonance_freqs_open,
+                list(
+                    map(abs, calcTfsBySomeFreqs(resonance_freqs_open, condition, cable))
+                ),
+                marker="v",
+                color="blue",
+            )
+            axes[i].plot(
+                antiresonance_freqs_open,
+                list(
+                    map(
+                        abs,
+                        calcTfsBySomeFreqs(antiresonance_freqs_open, condition, cable),
+                    )
+                ),
+                marker="o",
+                color="red",
+            )
+        elif i == 2:
+            # short
+            axes[i].plot(
+                resonance_freqs_short,
+                list(
+                    map(
+                        abs, calcTfsBySomeFreqs(resonance_freqs_short, condition, cable)
+                    )
+                ),
+                marker="v",
+                color="blue",
+            )
+            axes[i].plot(
+                antiresonance_freqs_short[1:],
+                list(
+                    map(
+                        abs,
+                        calcTfsBySomeFreqs(antiresonance_freqs_short[1:], condition, cable),
+                    )
+                ),
+                marker="o",
+                color="red",
+            )
         text = (
             "matching"
             if condition["shouldMatching"]
@@ -186,10 +255,10 @@ def drawFrequencyResponse(frequencies_Hz, endCondition, cable, fileName=""):
             else "short"
         )
         axes[i].set_title(f"{text}")
-        axes[i].set_ylabel("|H(f)|")
+        axes[i].set_ylabel("|H(f)|")  # y軸は、伝達関数の絶対値
         axes[i].set_xlabel("frequency [Hz]")
-        axes[i].set_yscale("log")
-        axes[i].ticklabel_format(style="sci",  axis="x",scilimits=(0,0))
+        axes[i].set_yscale("log")  # y軸はlogスケールで表示する
+        axes[i].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
         if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
             axes[i].set_ylim(1e-1, 1e3)
 
@@ -225,7 +294,7 @@ cable_noLoss_vertual = cable.Cable(
     resistance=0,
     # inductance=1.31e-7,
     # 特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
-    inductance=100e-12 * 50 ** 2,
+    inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
     conductance=0,
     # capacitance=67e-12,
     capacitance=100e-12,
@@ -246,18 +315,26 @@ frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 #     cable_noLoss_vertual,
 # )
 
-# drawFrequencyResponse(
-#     np.logspace(4, 6, 1000, base=10),
-#     {"shouldMatching": True, "impedance": 1e6},
-#     cable_noLoss_vertual,
-# )
+# print(np.logspace(4, 6, 1000, base=10)) # 1e4 ~ 1e6までlog10で1000区切り
+drawFrequencyResponse(
+    list(range(10000, 1000000, 100)),
+    cable.Cable(
+        resistance=0,
+        inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
+        conductance=0,
+        capacitance=100e-12,
+        length=1000,
+    ),
+)
 
 
 def squareWaveFftAndIfft():
     f = 1000
-    rate = 44100  # サンプリング周波数（ナイキスト周波数は44100 / 2）
+    rate = 44100  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
     # 方形波
-    T = np.arange(0, 0.01, 1 / rate)  # len(T) => 441, 1 / rate はサンプリング周期
+    T = np.arange(
+        0, 0.0087, 1 / rate
+    )  # len(T) => 441, 1 / rate はサンプリング周期（何秒おきにサンプリングするか）
     squareWaves_time = np.sign(np.sin(2 * np.pi * f * T))
     prevIndex = 0
     indexChunk = []
@@ -273,8 +350,14 @@ def squareWaveFftAndIfft():
                 indexChunk = []
             prevIndex = index
 
-    print(chunks)
-    inputWaves_time = squareWaves_time
+    single_palse = []
+    for index, y in enumerate(squareWaves_time):
+        if index in chunks[4]:
+            single_palse.append(y)
+        else:
+            single_palse.append(0)
+    inputWaves_time = list(single_palse)
+
     # sinc関数
     # T = np.linspace(-10, 10, 1000)
     # sincWaves_time = np.sinc(T)
@@ -305,13 +388,14 @@ def squareWaveFftAndIfft():
 
     tfs = calcTfsBySomeFreqs(
         frequencies,
-        {"shouldMatching": True, "impedance": 1e6},
+        {"shouldMatching": False, "impedance": 1e6},
+        # cable_noLoss_vertual
         cable.Cable(
-            resistance=0,
+            resistance=0,  # 無損失ケーブルを考える
             # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
             inductance=100e-12 * 50 ** 2,
-            conductance=0,
-            capacitance=100e-12,
+            conductance=0,  # 無損失ケーブルを考える
+            capacitance=100e-12,  # シートの値を参考に設定？
             length=1000,
         ),
     )
@@ -355,4 +439,4 @@ def squareWaveFftAndIfft():
     plt.show()
 
 
-squareWaveFftAndIfft()
+# squareWaveFftAndIfft()

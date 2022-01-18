@@ -16,10 +16,8 @@ def createTransferFunctionFromFMatrix(resistance, f_matrix):
     C = f_matrix[1][0]
     D = f_matrix[1][1]
 
-    try:
-        result = 1 / (A + B / R2 + R1 * C + (R1 / R2) * D)
-    except ZeroDivisionError:
-        result = 1e6
+    # R1 = 0 の場合、1 / (A + B / R2)
+    result = 1 / (A + B / R2 + R1 * C + (R1 / R2) * D)
 
     return result
 

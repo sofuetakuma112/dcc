@@ -204,63 +204,74 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             tf = createTransferFunction(frequency_Hz, condition, cable)
             tfs.append(tf)
 
+        # if i == 2:
+        #     print(list(map(abs, tfs)))
+
         axes[i].plot(
             frequencies_Hz,
             list(map(abs, tfs)),
             # list(map(util.convertGain2dB, tfs)),
         )
-        if i == 1:
-            # open
-            axes[i].plot(
-                resonance_freqs_open,
-                list(
-                    map(abs, calcTfsBySomeFreqs(resonance_freqs_open, condition, cable))
-                ),
-                marker="v",
-                color="blue",
-                linestyle="",
-            )
-            axes[i].plot(
-                antiresonance_freqs_open,
-                list(
-                    map(
-                        abs,
-                        calcTfsBySomeFreqs(antiresonance_freqs_open, condition, cable),
-                    )
-                ),
-                marker="o",
-                color="red",
-                linestyle="",
-            )
-            axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
-        elif i == 2:
-            # short
-            axes[i].plot(
-                resonance_freqs_short,
-                list(
-                    map(
-                        abs, calcTfsBySomeFreqs(resonance_freqs_short, condition, cable)
-                    )
-                ),
-                marker="v",
-                color="blue",
-                linestyle="",
-            )
-            axes[i].plot(
-                antiresonance_freqs_short[1:],
-                list(
-                    map(
-                        abs,
-                        calcTfsBySomeFreqs(
-                            antiresonance_freqs_short[1:], condition, cable
-                        ),
-                    )
-                ),
-                marker="o",
-                color="red",
-                linestyle="",
-            )
-            axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
+        if cable.resistance == 0 and cable.conductance == 0:
+            # 無損失ケーブル
+            if i == 1:
+                # open
+                axes[i].plot(
+                    resonance_freqs_open,
+                    list(
+                        map(
+                            abs,
+                            calcTfsBySomeFreqs(resonance_freqs_open, condition, cable),
+                        )
+                    ),
+                    marker="v",
+                    color="blue",
+                    linestyle="",
+                )
+                axes[i].plot(
+                    antiresonance_freqs_open,
+                    list(
+                        map(
+                            abs,
+                            calcTfsBySomeFreqs(
+                                antiresonance_freqs_open, condition, cable
+                            ),
+                        )
+                    ),
+                    marker="o",
+                    color="red",
+                    linestyle="",
+                )
+                axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
+            elif i == 2:
+                # short
+                axes[i].plot(
+                    resonance_freqs_short,
+                    list(
+                        map(
+                            abs,
+                            calcTfsBySomeFreqs(resonance_freqs_short, condition, cable),
+                        )
+                    ),
+                    marker="v",
+                    color="blue",
+                    linestyle="",
+                )
+                axes[i].plot(
+                    antiresonance_freqs_short[1:],
+                    list(
+                        map(
+                            abs,
+                            calcTfsBySomeFreqs(
+                                antiresonance_freqs_short[1:], condition, cable
+                            ),
+                        )
+                    ),
+                    marker="o",
+                    color="red",
+                    linestyle="",
+                )
+                axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         text = (
             "matching"
             if condition["shouldMatching"]
@@ -273,8 +284,9 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         axes[i].set_xlabel("frequency [Hz]")
         axes[i].set_yscale("log")  # y軸はlogスケールで表示する
         axes[i].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-        if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
-            axes[i].set_ylim(1e-1, 1e3)
+        if cable.resistance == 0 and cable.conductance == 0:
+            if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
+                axes[i].set_ylim(1e-1, 1e3)
 
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))
@@ -329,26 +341,29 @@ frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 #     cable_noLoss_vertual,
 # )
 
-# print(np.logspace(4, 6, 1000, base=10)) # 1e4 ~ 1e6までlog10で1000区切り
 drawFrequencyResponse(
-    list(range(10000, 1000000, 100)),
-    cable.Cable(
-        resistance=0,
-        inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
-        conductance=0,
-        capacitance=100e-12,
-        length=1000,
-    ),
+    # list(range(10000, 1000000, 100)),
+    list(range(0, 1000000, 100)),
+    cable_noLoss_vertual,
+    # cable.Cable(
+    #     resistance=1e-3,
+    #     inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
+    #     conductance=1e-4,
+    #     capacitance=100e-12,
+    #     length=1000,
+    # ),
 )
 
 
-def squareWaveFftAndIfft():
+def squareWaveFftAndIfft(cable, endCondition):
+    # サンプリング周期の逆数が入力波形の周波数？
     f = 1000
     rate = 44100  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
     # 方形波
     T = np.arange(
-        0, 0.0087, 1 / rate
+        0, 0.0087, 1 / rate  # 0.0087は単パルスが真ん中に来るよう調整した
     )  # len(T) => 441, 1 / rate はサンプリング周期（何秒おきにサンプリングするか）
+    # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
     squareWaves_time = np.sign(np.sin(2 * np.pi * f * T))
     prevIndex = 0
     indexChunk = []
@@ -365,6 +380,8 @@ def squareWaveFftAndIfft():
             prevIndex = index
 
     single_palse = []
+    # print(chunks[4])
+    # print("単パルス波形の周波数？ => ", 1 / (len(chunks[4]) * (1 / rate)))
     for index, y in enumerate(squareWaves_time):
         if index in chunks[4]:
             single_palse.append(y)
@@ -379,50 +396,67 @@ def squareWaveFftAndIfft():
 
     fig, axes = plt.subplots(3, 2)
     axes = axes.flatten()
+    # fig, axes = plt.subplots()
+    # fig, axes1 = plt.subplots()
+    # fig, axes2 = plt.subplots()
+    # fig, axes3 = plt.subplots()
+    # fig, axes4 = plt.subplots()
+    # fig, axes5 = plt.subplots()
+    # axes = [axes, axes1, axes2, axes3, axes4, axes5]
 
     axes[0].plot(T, inputWaves_time)
     axes[0].set_title("input(t)")
     axes[0].set_xlabel("Time")
     axes[0].set_ylabel("Gain")
+    axes[0].set_xlabel("time [s]")
 
     # フーリエ変換
     # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
+    # 実数をFFTする場合、
+    # 負の周波数のフーリエ係数の値は、
+    # 対応する正の周波数のフーリエ係数の虚数部分を打ち消すために共役な値をとる為、
+    # 情報としては正の周波数部分のみで十分
+    # numpy.fft.fft(
+    # FFTを行う配列,
+    # FFTを行うデータ点数。Noneとするとaの長さに等しくなる,
+    # FFTを行う配列の軸方向。指定しなければ、配列の最大次元の方向となる,
+    # "ortho"とすると正規化する。正規化すると変換値が1/√Nになる（Nはデータ点数
+    # )
+    # numpy.fft.fft()の戻り値は、長さnの複素数配列
     # inputWaves_fft = np.fft.fft(inputWaves_time)
+    # 工学系の用途向けに、実数のFFTに特化した np.fft.rfft が用意されている。
     inputWaves_fft = np.fft.rfft(inputWaves_time)
 
     # 離散フーリエ変換のサンプル周波数を返す（rfft, irfftで使用するため）
-    # np.fft.fftfreq(ウィンドウの長さ, サンプリングレートの逆数)
+    # np.fft.fftfreq(FFTを行うデータ点数, サンプリング周期) # サンプリング周期次第で時系列データの時間軸の長さが決定する（100点, 0.01）なら100 * 0.01[s]の時系列データということになる？
     # frequencies = np.fft.fftfreq(len(inputWaves_time), 1.0 / rate)
-    frequencies = np.fft.rfftfreq(len(inputWaves_time), 1.0 / rate)
+    frequencies = np.fft.rfftfreq(
+        len(inputWaves_time), 1.0 / rate
+    )  # len(frequencies) => 193, 1/rate はサンプリング周期（何秒おきにサンプリングするか）
+    # print(frequencies, len(frequencies))
 
     axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
     axes[1].set_title("abs(F[input(t)])")
     axes[1].set_xlabel("Frequency")
-    axes[1].set_ylabel("Power")
+    axes[1].set_ylabel("|F[input(t)]|")
+    axes[1].set_xlabel("Frequency [Hz]")
 
     tfs = calcTfsBySomeFreqs(
         frequencies,
-        {"shouldMatching": False, "impedance": 1e6},
-        # cable_noLoss_vertual
-        cable.Cable(
-            resistance=0,  # 無損失ケーブルを考える
-            # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
-            inductance=100e-12 * 50 ** 2,
-            conductance=0,  # 無損失ケーブルを考える
-            capacitance=100e-12,  # シートの値を参考に設定？
-            length=1000,
-        ),
+        endCondition,
+        cable,
     )
 
     axes[2].plot(frequencies, list(map(lambda tf: abs(tf), tfs)))
-    axes[2].set_title("|H(f)|")
+    axes[2].set_title("abs(H(f))")
     axes[2].set_xlabel("Frequency")
-    axes[2].set_ylabel("Gain [dB]")
+    axes[2].set_ylabel("|H(f)|")
+    axes[2].set_xlabel("Frequency [Hz]")
     # axes[2].set_yscale("log")
 
-    convolution = np.array(inputWaves_fft, dtype=np.complex) * np.array(
-        tfs, dtype=np.complex
-    )
+    convolution = np.array(inputWaves_fft) * np.array(
+        tfs
+    )  # 時間軸の畳み込み積分 = フーリエ変換した値同士の積(の値も周波数軸のもの)
     # convolution = np.array(inputWaves_fft, dtype=np.complex) * np.array(
     #     list(map(lambda tf: abs(tf), tfs)), dtype=np.complex
     # )
@@ -431,17 +465,20 @@ def squareWaveFftAndIfft():
     axes[3].plot(frequencies, np.abs(convolution))  # absで振幅を取得
     axes[3].set_title("abs(F[input(t)] * H(f))")
     axes[3].set_xlabel("Frequency")
-    axes[3].set_ylabel("Power")
+    axes[3].set_ylabel("|F[input(t)] * H(f)|")
+    axes[3].set_xlabel("Frequency [Hz]")
 
     # 逆フーリエ変換
     # r = np.fft.ifft(convolution, len(T))
-    #  irfft: 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
+    # 入力波形が実数データ向けの逆FFT np.fft.irfft が用意されている。
+    # 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
     # 入力波形が実数値のみなので、出力波形も虚数部分は捨ててよい？
     r = np.fft.irfft(convolution, len(T))
     axes[4].plot(T, np.real(r))
     axes[4].set_title("output(t).real")
     axes[4].set_xlabel("Time")
     axes[4].set_ylabel("Gain")
+    axes[4].set_xlabel("time [s]")
 
     r = np.fft.irfft(convolution, len(T))
     axes[5].plot(T, np.imag(r))
@@ -453,4 +490,14 @@ def squareWaveFftAndIfft():
     plt.show()
 
 
-# squareWaveFftAndIfft()
+# squareWaveFftAndIfft(
+#     cable.Cable(
+#         resistance=1e-3,  # 無損失ケーブルを考える
+#         # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
+#         inductance=100e-12 * 50 ** 2,
+#         conductance=1e-4,  # 無損失ケーブルを考える
+#         capacitance=100e-12,  # シートの値を参考に設定？
+#         length=1000,
+#     ),
+#     {"shouldMatching": False, "impedance": 1e-6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+# )

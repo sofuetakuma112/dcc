@@ -280,8 +280,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             else "short"
         )
         axes[i].set_title(f"{text}")
-        axes[i].set_ylabel("|H(f)|")  # y軸は、伝達関数の絶対値
-        axes[i].set_xlabel("frequency [Hz]")
+        axes[i].set_ylabel("|H(f)|", fontsize=16)  # y軸は、伝達関数の絶対値
+        axes[i].set_xlabel("frequency [Hz]", fontsize=16)
         axes[i].set_yscale("log")  # y軸はlogスケールで表示する
         axes[i].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
         if cable.resistance == 0 and cable.conductance == 0:
@@ -291,9 +291,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))
 
-    plt.subplots_adjust(
-        left=0.0625, bottom=0.1, right=0.98, top=0.9, wspace=0.2, hspace=0.35
-    )
+    plt.tight_layout()
     plt.show()
 
 
@@ -341,18 +339,18 @@ frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 #     cable_noLoss_vertual,
 # )
 
-drawFrequencyResponse(
-    # list(range(10000, 1000000, 100)),
-    list(range(0, 1000000, 100)),
-    cable_noLoss_vertual,
-    # cable.Cable(
-    #     resistance=1e-3,
-    #     inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
-    #     conductance=1e-4,
-    #     capacitance=100e-12,
-    #     length=1000,
-    # ),
-)
+# drawFrequencyResponse(
+#     # list(range(10000, 1000000, 100)),
+#     list(range(0, 1000000, 100)),
+#     # cable_noLoss_vertual,
+#     cable.Cable(
+#         resistance=1e-3,
+#         inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
+#         conductance=1e-4,
+#         capacitance=100e-12,
+#         length=1000,
+#     ),
+# )
 
 
 def squareWaveFftAndIfft(cable, endCondition):
@@ -394,21 +392,20 @@ def squareWaveFftAndIfft(cable, endCondition):
     # sincWaves_time = np.sinc(T)
     # inputWaves_time = sincWaves_time
 
-    fig, axes = plt.subplots(3, 2)
-    axes = axes.flatten()
-    # fig, axes = plt.subplots()
-    # fig, axes1 = plt.subplots()
-    # fig, axes2 = plt.subplots()
-    # fig, axes3 = plt.subplots()
-    # fig, axes4 = plt.subplots()
-    # fig, axes5 = plt.subplots()
-    # axes = [axes, axes1, axes2, axes3, axes4, axes5]
+    # fig, axes = plt.subplots(3, 2)
+    # axes = axes.flatten()
+    fig, axes = plt.subplots()
+    fig, axes1 = plt.subplots()
+    fig, axes2 = plt.subplots()
+    fig, axes3 = plt.subplots()
+    fig, axes4 = plt.subplots()
+    fig, axes5 = plt.subplots()
+    axes = [axes, axes1, axes2, axes3, axes4, axes5]
 
     axes[0].plot(T, inputWaves_time)
     axes[0].set_title("input(t)")
-    axes[0].set_xlabel("Time")
-    axes[0].set_ylabel("Gain")
-    axes[0].set_xlabel("time [s]")
+    axes[0].set_ylabel("Gain", fontsize=16)
+    axes[0].set_xlabel("time [s]", fontsize=16)
 
     # フーリエ変換
     # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
@@ -437,9 +434,8 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
     axes[1].set_title("abs(F[input(t)])")
-    axes[1].set_xlabel("Frequency")
-    axes[1].set_ylabel("|F[input(t)]|")
-    axes[1].set_xlabel("Frequency [Hz]")
+    axes[1].set_ylabel("|F[input(t)]|", fontsize=16)
+    axes[1].set_xlabel("Frequency [Hz]", fontsize=16)
 
     tfs = calcTfsBySomeFreqs(
         frequencies,
@@ -449,9 +445,8 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     axes[2].plot(frequencies, list(map(lambda tf: abs(tf), tfs)))
     axes[2].set_title("abs(H(f))")
-    axes[2].set_xlabel("Frequency")
-    axes[2].set_ylabel("|H(f)|")
-    axes[2].set_xlabel("Frequency [Hz]")
+    axes[2].set_ylabel("|H(f)|", fontsize=16)
+    axes[2].set_xlabel("Frequency [Hz]", fontsize=16)
     # axes[2].set_yscale("log")
 
     convolution = np.array(inputWaves_fft) * np.array(
@@ -464,9 +459,8 @@ def squareWaveFftAndIfft(cable, endCondition):
     # 入力波形のフーリエ変換 * 伝達関数
     axes[3].plot(frequencies, np.abs(convolution))  # absで振幅を取得
     axes[3].set_title("abs(F[input(t)] * H(f))")
-    axes[3].set_xlabel("Frequency")
-    axes[3].set_ylabel("|F[input(t)] * H(f)|")
-    axes[3].set_xlabel("Frequency [Hz]")
+    axes[3].set_ylabel("|F[input(t)] * H(f)|", fontsize=16)
+    axes[3].set_xlabel("Frequency [Hz]", fontsize=16)
 
     # 逆フーリエ変換
     # r = np.fft.ifft(convolution, len(T))
@@ -476,28 +470,27 @@ def squareWaveFftAndIfft(cable, endCondition):
     r = np.fft.irfft(convolution, len(T))
     axes[4].plot(T, np.real(r))
     axes[4].set_title("output(t).real")
-    axes[4].set_xlabel("Time")
-    axes[4].set_ylabel("Gain")
-    axes[4].set_xlabel("time [s]")
+    axes[4].set_ylabel("Gain", fontsize=16)
+    axes[4].set_xlabel("time [s]", fontsize=16)
 
     r = np.fft.irfft(convolution, len(T))
     axes[5].plot(T, np.imag(r))
     axes[5].set_title("output(t).imag")
-    axes[5].set_xlabel("Time")
-    axes[5].set_ylabel("Gain")
+    axes[5].set_ylabel("Gain", fontsize=16)
+    axes[5].set_xlabel("time [s]", fontsize=16)
 
     plt.tight_layout()
     plt.show()
 
 
-# squareWaveFftAndIfft(
-#     cable.Cable(
-#         resistance=1e-3,  # 無損失ケーブルを考える
-#         # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
-#         inductance=100e-12 * 50 ** 2,
-#         conductance=1e-4,  # 無損失ケーブルを考える
-#         capacitance=100e-12,  # シートの値を参考に設定？
-#         length=1000,
-#     ),
-#     {"shouldMatching": False, "impedance": 1e-6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
-# )
+squareWaveFftAndIfft(
+    cable.Cable(
+        resistance=1e-3,  # 無損失ケーブルを考える
+        # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
+        inductance=100e-12 * 50 ** 2,
+        conductance=1e-4,  # 無損失ケーブルを考える
+        capacitance=100e-12,  # シートの値を参考に設定？
+        length=1000,
+    ),
+    {"shouldMatching": False, "impedance": 1e-6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+)

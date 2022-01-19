@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-import cmath
 import datetime
 import random, string
 import os
@@ -79,3 +78,22 @@ def getNearestValue(list, num):
     # リスト要素と対象値の差分を計算し最小値のインデックスを取得
     idx = np.abs(np.asarray(list) - num).argmin()
     return list[idx]
+
+
+# 引数の周波数、ケーブル情報からαを求める
+def calcAttenuationConstant(frequency, cable):
+    omega = 2 * np.pi * frequency
+    R = cable.resistance
+    L = cable.inductance
+    G = cable.conductance
+    C = cable.capacitance
+    return np.sqrt(
+        (
+            np.sqrt((R ** 2 + omega ** 2 * L ** 2) * (G ** 2 + omega ** 2 * C ** 2))
+            + (R * G - omega ** 2 * L * C)
+        )
+        / 2
+    )
+
+def np2db(np):
+    return np * (20 / math.log(10))

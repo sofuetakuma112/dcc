@@ -1,6 +1,5 @@
 import cmath
 import math
-import math
 
 import matplotlib
 
@@ -11,8 +10,9 @@ import numpy as np
 from tqdm import tqdm
 
 import cable
-from snippet import drawFrequencyResponse
 import util
+
+ONE_HUNDRED = 1000000
 
 
 def calculateTheta(frequency_Hz, cable):
@@ -204,9 +204,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             tf = createTransferFunction(frequency_Hz, condition, cable)
             tfs.append(tf)
 
-        # if i == 2:
-        #     print(list(map(abs, tfs)))
-
         axes[i].plot(
             frequencies_Hz,
             list(map(abs, tfs)),
@@ -279,9 +276,10 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             if condition["impedance"] >= 1e6
             else "short"
         )
+        FONT_SIZE = 12
         axes[i].set_title(f"{text}")
-        axes[i].set_ylabel("|H(f)|", fontsize=16)  # y軸は、伝達関数の絶対値
-        axes[i].set_xlabel("frequency [Hz]", fontsize=16)
+        axes[i].set_ylabel("|H(f)|", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
+        axes[i].set_xlabel("frequency [Hz]", fontsize=FONT_SIZE)
         axes[i].set_yscale("log")  # y軸はlogスケールで表示する
         axes[i].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
         if cable.resistance == 0 and cable.conductance == 0:
@@ -302,55 +300,6 @@ def calcTfsBySomeFreqs(frequencies_Hz, endCondition, cable):
         tf = createTransferFunction(frequency_Hz, endCondition, cable)
         tfs.append(tf)
     return tfs
-
-
-# ケーブルのインスタンスを作成
-cable_vertual = cable.Cable(
-    resistance=1e-6,
-    inductance=1.31e-7,
-    conductance=1e-4,
-    capacitance=67e-12,
-    length=1000,
-)
-
-# 無損失ケーブル
-cable_noLoss_vertual = cable.Cable(
-    resistance=0,
-    # inductance=1.31e-7,
-    # 特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
-    inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
-    conductance=0,
-    # capacitance=67e-12,
-    capacitance=100e-12,
-    length=1000,
-)
-
-# ケーブルの周波数特性をグラフにする
-frequencies_Hz = list(range(0, 10000, 10))
-frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
-# drawBodePlot(
-#     np.logspace(4, 6, 1000, base=10),
-#     {"shouldMatching": False, "impedance": 1e6},
-#     cable_vertual,
-# )
-# drawBodePlot(
-#     np.logspace(4, 6, 1000, base=10),
-#     {"shouldMatching": True, "impedance": 1e6},
-#     cable_noLoss_vertual,
-# )
-
-# drawFrequencyResponse(
-#     # list(range(10000, 1000000, 100)),
-#     list(range(0, 1000000, 100)),
-#     # cable_noLoss_vertual,
-#     cable.Cable(
-#         resistance=1e-3,
-#         inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
-#         conductance=1e-4,
-#         capacitance=100e-12,
-#         length=1000,
-#     ),
-# )
 
 
 def squareWaveFftAndIfft(cable, endCondition):
@@ -392,20 +341,22 @@ def squareWaveFftAndIfft(cable, endCondition):
     # sincWaves_time = np.sinc(T)
     # inputWaves_time = sincWaves_time
 
-    # fig, axes = plt.subplots(3, 2)
-    # axes = axes.flatten()
-    fig, axes = plt.subplots()
-    fig, axes1 = plt.subplots()
-    fig, axes2 = plt.subplots()
-    fig, axes3 = plt.subplots()
-    fig, axes4 = plt.subplots()
-    fig, axes5 = plt.subplots()
-    axes = [axes, axes1, axes2, axes3, axes4, axes5]
+    fig, axes = plt.subplots(3, 2)
+    axes = axes.flatten()
+    # fig, axes = plt.subplots()
+    # fig, axes1 = plt.subplots()
+    # fig, axes2 = plt.subplots()
+    # fig, axes3 = plt.subplots()
+    # fig, axes4 = plt.subplots()
+    # fig, axes5 = plt.subplots()
+    # axes = [axes, axes1, axes2, axes3, axes4, axes5]
+
+    FONT_SIZE = 12
 
     axes[0].plot(T, inputWaves_time)
     axes[0].set_title("input(t)")
-    axes[0].set_ylabel("Gain", fontsize=16)
-    axes[0].set_xlabel("time [s]", fontsize=16)
+    axes[0].set_ylabel("Gain", fontsize=FONT_SIZE)
+    axes[0].set_xlabel("time [s]", fontsize=FONT_SIZE)
 
     # フーリエ変換
     # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
@@ -434,8 +385,8 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
     axes[1].set_title("abs(F[input(t)])")
-    axes[1].set_ylabel("|F[input(t)]|", fontsize=16)
-    axes[1].set_xlabel("Frequency [Hz]", fontsize=16)
+    axes[1].set_ylabel("|F[input(t)]|", fontsize=FONT_SIZE)
+    axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
 
     tfs = calcTfsBySomeFreqs(
         frequencies,
@@ -445,8 +396,8 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     axes[2].plot(frequencies, list(map(lambda tf: abs(tf), tfs)))
     axes[2].set_title("abs(H(f))")
-    axes[2].set_ylabel("|H(f)|", fontsize=16)
-    axes[2].set_xlabel("Frequency [Hz]", fontsize=16)
+    axes[2].set_ylabel("|H(f)|", fontsize=FONT_SIZE)
+    axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     # axes[2].set_yscale("log")
 
     convolution = np.array(inputWaves_fft) * np.array(
@@ -459,8 +410,8 @@ def squareWaveFftAndIfft(cable, endCondition):
     # 入力波形のフーリエ変換 * 伝達関数
     axes[3].plot(frequencies, np.abs(convolution))  # absで振幅を取得
     axes[3].set_title("abs(F[input(t)] * H(f))")
-    axes[3].set_ylabel("|F[input(t)] * H(f)|", fontsize=16)
-    axes[3].set_xlabel("Frequency [Hz]", fontsize=16)
+    axes[3].set_ylabel("|F[input(t)] * H(f)|", fontsize=FONT_SIZE)
+    axes[3].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
 
     # 逆フーリエ変換
     # r = np.fft.ifft(convolution, len(T))
@@ -470,27 +421,223 @@ def squareWaveFftAndIfft(cable, endCondition):
     r = np.fft.irfft(convolution, len(T))
     axes[4].plot(T, np.real(r))
     axes[4].set_title("output(t).real")
-    axes[4].set_ylabel("Gain", fontsize=16)
-    axes[4].set_xlabel("time [s]", fontsize=16)
+    axes[4].set_ylabel("Gain", fontsize=FONT_SIZE)
+    axes[4].set_xlabel("time [s]", fontsize=FONT_SIZE)
 
     r = np.fft.irfft(convolution, len(T))
     axes[5].plot(T, np.imag(r))
     axes[5].set_title("output(t).imag")
-    axes[5].set_ylabel("Gain", fontsize=16)
-    axes[5].set_xlabel("time [s]", fontsize=16)
+    axes[5].set_ylabel("Gain", fontsize=FONT_SIZE)
+    axes[5].set_xlabel("time [s]", fontsize=FONT_SIZE)
 
     plt.tight_layout()
     plt.show()
 
 
-squareWaveFftAndIfft(
-    cable.Cable(
-        resistance=1e-3,  # 無損失ケーブルを考える
-        # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
-        inductance=100e-12 * 50 ** 2,
-        conductance=1e-4,  # 無損失ケーブルを考える
-        capacitance=100e-12,  # シートの値を参考に設定？
-        length=1000,
-    ),
-    {"shouldMatching": False, "impedance": 1e-6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+exist_cables = [
+    {"alphas": [27, 82, 390], "name": "1.5C-2V"},
+    {"alphas": [12, 40, 195], "name": "3C-2V"},
+    {"alphas": [7.6, 25, 125], "name": "5C-2V"},
+    {"alphas": [27, 85, 420], "name": "1.5D-2V"},
+    {"alphas": [13, 44, 220], "name": "3D-2V"},
+    {"alphas": [7.3, 26, 125], "name": "5D-2V"},
+    {"alphas": [4.8, 17, 85], "name": "8D-2V"},
+    {"alphas": [13, 42, 200], "name": "RG58/U"},
+    {"alphas": [14, 48, 230], "name": "RG58A/U"},
+]
+
+
+def drawAttenuationConstant(
+    frequencies_Hz, cable, ax=plt.subplots()[1], shouldShowOneGlaph=True
+):
+    # 周波数ごとにalphaを求める
+    alphas_db = []
+    for frequency_Hz in tqdm(frequencies_Hz, leave=False):
+        #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+        alpha_np = util.calcAttenuationConstant(frequency_Hz, cable)  # Np/m
+        alpha_db = util.np2db(alpha_np)  # dB/m
+        alphas_db.append(alpha_db)
+    # 縦軸alpha, 横軸周波数でプロットする(alphaの値を1000倍して単位をdb/kmにしてプロットする？)
+    FONT_SIZE = 12
+    ax.plot(
+        frequencies_Hz,
+        list(map(lambda x: x * 1000, alphas_db)),
+        label="vertual cable",
+        zorder=5,
+    )  # absで振幅を取得
+    ax.set_title("周波数ごとの減衰定数の推移")
+    ax.set_ylabel("α [dB/km]", fontsize=FONT_SIZE)
+    ax.set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    colors = [
+        "tab:blue",
+        "tab:orange",
+        "tab:green",
+        "tab:red",
+        "tab:purple",
+        "tab:brown",
+        "tab:pink",
+        "tab:gray",
+        "tab:olive",
+    ]
+    markers = [".", ",", "o", "v", "^", "<", ">", "1", "2"]
+    for (exist_cable, color, marker) in zip(exist_cables, colors, markers):
+        ax.plot(
+            [1e6, 10e6, 200e6],  # 1MHz, 10MHz, 200MHz
+            exist_cable["alphas"],
+            marker=marker,
+            color=color,
+            # linestyle="",
+            label=exist_cable["name"],
+        )
+        ax.legend()
+
+    if shouldShowOneGlaph:
+        plt.tight_layout()
+        plt.show()
+
+
+def drawAttenuationConstantBySomeRLGC():
+    resistances = [1e-4, 1e-5, 1e-6]
+    conductances = [1e-4, 1e-5, 1e-6]
+    inductances = []
+
+    count = 0
+    fig, axes = plt.subplots(len(resistances), len(conductances))
+    axes = axes.flatten()
+    for i, R in enumerate(resistances):
+        for j, G in enumerate(conductances):
+            drawAttenuationConstant(
+                list(range(0, 220 * ONE_HUNDRED, 10000)),
+                cable.Cable(
+                    resistance=R,  # 無損失ケーブルを考える
+                    inductance=2.5e-9,
+                    conductance=G,  # 無損失ケーブルを考える
+                    capacitance=100e-12,  # シートの値を参考に設定？
+                    length=1000,
+                ),
+                axes[count],
+                False,
+            )
+
+            axes[count].set_title(f"R = {R}, G = {G}")
+            count += 1
+    plt.tight_layout()
+    plt.show()
+
+
+# 横軸距離、縦軸減衰定数でグラフを描画する
+def drawAttenuationConstantByDistance(cable):
+    frequencies_Hz = [1e6, 10e6, 200e6]
+    alphas_db = []
+    for frequency_Hz in tqdm(frequencies_Hz, leave=False):
+        #  5C-2V + Zrの回路の入力インピーダンスを受電端側の抵抗Zrとする
+        alpha_np = util.calcAttenuationConstant(frequency_Hz, cable)  # Np/m
+        alpha_db = util.np2db(alpha_np)  # dB/m
+        alphas_db.append(alpha_db)
+
+    fig, axes = plt.subplots(1, 3)
+    colors = [
+        "tab:blue",
+        "tab:orange",
+        "tab:green",
+        "tab:red",
+        "tab:purple",
+        "tab:brown",
+        "tab:pink",
+        "tab:gray",
+        "tab:olive",
+    ]
+    markers = [".", ",", "o", "v", "^", "<", ">", "1", "2"]
+    for i, alpha_db in enumerate(alphas_db):
+        distances = list(range(0, 1000, 10))
+        axes[i].plot(
+            distances,
+            list(map(lambda distance: distance * alpha_db, distances)),
+            label="vertual cable",
+            zorder=5,
+        )
+        for j, exist_cable in enumerate(exist_cables):
+            alpha_db_km = exist_cable["alphas"][i]
+            axes[i].plot(
+                distances,
+                list(map(lambda distance: distance * alpha_db_km / 1000, distances)),
+                # marker=markers[j],
+                color=colors[j],
+                label=exist_cable["name"],
+                # linestyle="",
+            )
+    plt.tight_layout()
+    plt.show()
+
+
+# ケーブルのインスタンスを作成
+cable_vertual = cable.Cable(
+    resistance=1e-8,
+    inductance=1e-12,
+    conductance=0.9,
+    capacitance=100e-12,  # シートの値を参考に設定？
+    length=1000,
 )
+
+# 無損失ケーブル
+cable_noLoss_vertual = cable.Cable(
+    resistance=0,
+    # inductance=1.31e-7,
+    # 特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
+    inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
+    conductance=0,
+    # capacitance=67e-12,
+    capacitance=100e-12,
+    length=1000,
+)
+
+# ケーブルの周波数特性をグラフにする
+frequencies_Hz = list(range(0, 10000, 10))
+frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
+# drawBodePlot(
+#     np.logspace(4, 6, 1000, base=10),
+#     {"shouldMatching": False, "impedance": 1e6},
+#     cable_vertual,
+# )
+# drawBodePlot(
+#     np.logspace(4, 6, 1000, base=10),
+#     {"shouldMatching": True, "impedance": 1e6},
+#     cable_noLoss_vertual,
+# )
+
+# drawFrequencyResponse(
+#     list(range(0, ONE_HUNDRED, 100)),
+#     # cable.Cable(
+#     #     resistance=1e-3,
+#     #     inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
+#     #     conductance=1e-4,
+#     #     capacitance=100e-12,
+#     #     length=1000,
+#     # ),
+#     cable_vertual,
+# )
+
+# squareWaveFftAndIfft(
+#     # cable.Cable(
+#     #     resistance=1e-3,
+#     #     # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
+#     #     inductance=100e-12 * 50 ** 2,
+#     #     conductance=1e-4,
+#     #     capacitance=100e-12,  # シートの値を参考に設定？
+#     #     length=1000,
+#     # ),
+#     cable.Cable(
+#         resistance=1e-8,
+#         inductance=1e-12,
+#         conductance=0.9,
+#         capacitance=100e-12,  # シートの値を参考に設定？
+#         length=1000,
+#     ),
+#     {"shouldMatching": False, "impedance": 1e-6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+# )
+
+# drawAttenuationConstant(list(range(0, 220 * ONE_HUNDRED, 10000)), cable_vertual)
+
+# drawAttenuationConstantBySomeRLGC()
+
+drawAttenuationConstantByDistance(cable_vertual)

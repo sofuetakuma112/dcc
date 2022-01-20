@@ -1,27 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import datetime
 import random, string
 import os
 
-# 与えられたF行列から伝達関数を求める
-def createTransferFunctionFromFMatrix(resistance, f_matrix):
-    R1 = 0  # 入力側の抵抗は0で考える
-    R2 = resistance
 
-    A = f_matrix[0][0]
-    B = f_matrix[0][1]
-    C = f_matrix[1][0]
-    D = f_matrix[1][1]
-
-    # R1 = 0 の場合、1 / (A + B / R2)
-    result = 1 / (A + B / R2 + R1 * C + (R1 / R2) * D)
-
-    return result
-
-
-# 伝達関数G(f)からdBへ変換する
+# 伝達関数G(f)[計算済み]からdBへ変換する
 def convertGain2dB(tf):
     return 20 * math.log10(abs(tf))
 
@@ -51,7 +35,7 @@ def createImagePath(fileName=""):
     day = today_string[6:8]
 
     todayDirectoryName = f"{year}_{month}_{day}"
-    imageFileName = randomname(12) if fileName == "" else fileName
+    imageFileName = createRandomChars(12) if fileName == "" else fileName
 
     if not os.path.exists(f"img/{todayDirectoryName}"):
         # ディレクトリが存在しない場合、ディレクトリを作成する
@@ -62,12 +46,12 @@ def createImagePath(fileName=""):
     return image_file_path
 
 
-def randomname(n):
+def createRandomChars(n):
     randlst = [random.choice(string.ascii_letters + string.digits) for i in range(n)]
     return "".join(randlst)
 
 
-def getNearestValue(list, num):
+def getNearestNumber(list, num):
     """
     概要: リストからある値に最も近い値を返却する関数
     @param list: データ配列
@@ -95,5 +79,22 @@ def calcAttenuationConstant(frequency, cable):
         / 2
     )
 
+
 def np2db(np):
     return np * (20 / math.log(10))
+
+
+colors = [
+    "tab:blue",
+    "tab:orange",
+    "tab:green",
+    "tab:red",
+    "tab:purple",
+    "tab:brown",
+    "tab:pink",
+    "tab:gray",
+    "tab:olive",
+]
+markers = [".", ",", "o", "v", "^", "<", ">", "1", "2"]
+
+ONE_HUNDRED = 1000000

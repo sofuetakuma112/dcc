@@ -21,3 +21,34 @@ class Cable:
             / (self.conductance + 1j * omega * self.capacitance)
         )
 
+
+# ケーブルのインスタンスを作成
+cable_vertual = Cable(
+    resistance=1e-8,
+    inductance=1e-12,
+    conductance=0.9,
+    capacitance=100e-12,
+    length=1000,
+)
+
+# 無損失ケーブル
+# 特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
+cable_noLoss_vertual = Cable(
+    resistance=0,
+    inductance=100e-12 * 50 ** 2,  # C * Zo ** 2 から求めた
+    conductance=0,
+    capacitance=100e-12,
+    length=1000,
+)
+
+exist_cables = [
+    {"alphas": [27, 82, 390], "name": "1.5C-2V"},
+    {"alphas": [12, 40, 195], "name": "3C-2V"},
+    {"alphas": [7.6, 25, 125], "name": "5C-2V"},
+    {"alphas": [27, 85, 420], "name": "1.5D-2V"},
+    {"alphas": [13, 44, 220], "name": "3D-2V"},
+    {"alphas": [7.3, 26, 125], "name": "5D-2V"},
+    {"alphas": [4.8, 17, 85], "name": "8D-2V"},
+    {"alphas": [13, 42, 200], "name": "RG58/U"},
+    {"alphas": [14, 48, 230], "name": "RG58A/U"},
+]

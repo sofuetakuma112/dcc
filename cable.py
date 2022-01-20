@@ -22,7 +22,7 @@ class Cable:
         )
 
 
-# ケーブルのインスタンスを作成
+# 損失有りのケーブル
 cable_vertual = Cable(
     resistance=1e-8,
     inductance=1e-12,
@@ -41,6 +41,9 @@ cable_noLoss_vertual = Cable(
     length=1000,
 )
 
+# データシートの値をpythonのデータ構造で表現したもの
+# alphas: 1MHz, 10MHz, 200MHzにおける減衰定数[dB/km]のリスト
+# name: ケーブルの名称
 exist_cables = [
     {"alphas": [27, 82, 390], "name": "1.5C-2V"},
     {"alphas": [12, 40, 195], "name": "3C-2V"},

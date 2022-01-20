@@ -5,13 +5,27 @@ import random, string
 import os
 
 
-# 伝達関数G(f)[計算済み]からdBへ変換する
 def convertGain2dB(tf):
+    """
+    伝達関数G(f)[計算済み]からdBへ変換する
+
+    Parameters
+    ----------
+    tf: complex
+        計算した伝達関数の値
+    """
     return 20 * math.log10(abs(tf))
 
 
-# リストの中から傾きが最小となる組み合わせを見つけて、その傾きを返す
 def calcMinimumSlope(tfs_nthPwrOf10):
+    """
+    リストの中から傾きが最小となる組み合わせを見つけて、その傾きを返す
+
+    Parameters
+    ----------
+    tfs_nthPwrOf10: list
+        10の累乗の周波数に対応した伝達関数のリスト
+    """
     slopes = []
     nOfCombinations = len(tfs_nthPwrOf10) - 1
     index = 0
@@ -26,6 +40,15 @@ def calcMinimumSlope(tfs_nthPwrOf10):
 
 
 def createImagePath(fileName=""):
+    """
+    imgディレクトリ配下に実行時のYYYY_MM_DDのディレクトリを作成し
+    そのディレクトリ配下への相対パスを作成する
+
+    Parameters
+    ----------
+    fileName: string
+        保存するファイル名
+    """
     t_delta = datetime.timedelta(hours=9)
     JST = datetime.timezone(t_delta, "JST")
     now = datetime.datetime.now(JST)
@@ -47,16 +70,28 @@ def createImagePath(fileName=""):
 
 
 def createRandomChars(n):
+    """
+    指定された数の長さをもつランダムな文字列を作成する
+
+    Parameters
+    ----------
+    n: float
+        生成する文字数
+    """
     randlst = [random.choice(string.ascii_letters + string.digits) for i in range(n)]
     return "".join(randlst)
 
 
 def getNearestNumber(list, num):
     """
-    概要: リストからある値に最も近い値を返却する関数
-    @param list: データ配列
-    @param num: 対象値
-    @return 対象値に最も近い値
+    listの中でnumに最も近い値を返却する関数
+
+    Parameters
+    ----------
+    list : list
+        データ配列
+    num: float
+        対象値
     """
 
     # リスト要素と対象値の差分を計算し最小値のインデックスを取得
@@ -64,8 +99,17 @@ def getNearestNumber(list, num):
     return list[idx]
 
 
-# 引数の周波数、ケーブル情報からαを求める
 def calcAttenuationConstant(frequency, cable):
+    """
+    引数の周波数、ケーブル情報から減衰定数を求める
+
+    Parameters
+    ----------
+    frequency : float
+        周波数[Hz]
+    cable: instance
+        Cableインスタンス
+    """
     omega = 2 * np.pi * frequency
     R = cable.resistance
     L = cable.inductance
@@ -79,11 +123,19 @@ def calcAttenuationConstant(frequency, cable):
         / 2
     )
 
-
 def np2db(np):
+    """
+    ネーパをデジベルに変換する
+
+    Parameters
+    ----------
+    np : float
+        ネーパ(Np)
+    """
     return np * (20 / math.log(10))
 
 
+# matplotlibのグラフ表示に使用するオプション群
 colors = [
     "tab:blue",
     "tab:orange",

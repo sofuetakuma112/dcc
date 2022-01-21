@@ -188,5 +188,5 @@ squareWaveFftAndIfft(
     #     length=1000,
     # ),
     cable.cable_vertual,
-    {"shouldMatching": False, "impedance": 1e6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+    {"shouldMatching": False, "impedance": 50},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 )

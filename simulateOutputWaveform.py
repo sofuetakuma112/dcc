@@ -31,10 +31,10 @@ def squareWaveFftAndIfft(cable, endCondition):
     )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
     # len(times) => 1000
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
-    squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
-    
+    # squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
+
     # 周波数f[Hz]の振幅1の正弦波形の時間関数を表している。
-    # squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
+    squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
 
     # prevIndex = 0
     # indexChunk = []

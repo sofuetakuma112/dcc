@@ -32,6 +32,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     # len(times) => 1000
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
     squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
+    
+    # 周波数f[Hz]の振幅1の正弦波形の時間関数を表している。
+    # squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
 
     # prevIndex = 0
     # indexChunk = []
@@ -47,7 +50,7 @@ def squareWaveFftAndIfft(cable, endCondition):
     #             indexChunk = []
     #         prevIndex = index
 
-    single_palse = []
+    # single_palse = []
     ratio = len(
         list(filter(lambda y: True if y == 1 else False, squareWaves_time))
     ) / len(squareWaves_time)
@@ -110,7 +113,13 @@ def squareWaveFftAndIfft(cable, endCondition):
     )  # len(frequencies) => 193, 1/samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
     # print(frequencies, len(frequencies))
 
-    axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
+    # axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
+    # axes[1].set_title("abs(F[input(t)])")
+    # axes[1].set_ylabel("|F[input(t)]|", fontsize=FONT_SIZE)
+    # # axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    # axes[1].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
+    # axes[1].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
+    axes[1].plot(frequencies[:10], np.abs(inputWaves_fft[:10]))  # absで振幅を取得
     axes[1].set_title("abs(F[input(t)])")
     axes[1].set_ylabel("|F[input(t)]|", fontsize=FONT_SIZE)
     # axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)

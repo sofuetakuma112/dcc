@@ -1,4 +1,5 @@
 import matplotlib
+from matplotlib.ticker import ScalarFormatter
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
@@ -8,40 +9,56 @@ import numpy as np
 import transferFunction as tfModules
 import cable
 
+# クラス設定  ※ScalarFormatterを継承
+class FixedOrderFormatter(ScalarFormatter):
+    def __init__(self, order_of_mag=0, useOffset=True, useMathText=True):
+        self._order_of_mag = order_of_mag
+        ScalarFormatter.__init__(self, useOffset=useOffset, useMathText=useMathText)
+
+    def _set_order_of_magnitude(self):
+        self.orderOfMagnitude = self._order_of_mag
+
 
 def squareWaveFftAndIfft(cable, endCondition):
-    # サンプリング周期の逆数が入力波形の周波数？
-    f = 1000
-    rate = 44100  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
+    # f = 1000
+    input_wave_frequency = 1e6  # 1[MHz]
+    samplingFrequency = (
+        input_wave_frequency * 1000
+    )  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
     # 方形波
-    T = np.arange(
-        0, 0.0087, 1 / rate  # 0.0087は単パルスが真ん中に来るよう調整した
-    )  # len(T) => 441, 1 / rate はサンプリング周期（何秒おきにサンプリングするか）
+    times = np.arange(
+        0, 1 / input_wave_frequency, 1 / samplingFrequency
+    )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
+    # len(times) => 1000
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
-    squareWaves_time = np.sign(np.sin(2 * np.pi * f * T))
-    prevIndex = 0
-    indexChunk = []
-    chunks = []
-    for index, discreteValue in enumerate(squareWaves_time):
-        if discreteValue == 1:
-            if prevIndex + 1 == index:
-                # 同じ-1の塊に現在いる
-                indexChunk.append(index)
-            else:
-                # 次の-1の塊に移動した
-                chunks.append(indexChunk)
-                indexChunk = []
-            prevIndex = index
+    squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
+
+    # prevIndex = 0
+    # indexChunk = []
+    # chunks = []
+    # for index, discreteValue in enumerate(squareWaves_time):
+    #     if discreteValue == 1:
+    #         if prevIndex + 1 == index:
+    #             # 同じ-1の塊に現在いる
+    #             indexChunk.append(index)
+    #         else:
+    #             # 次の-1の塊に移動した
+    #             chunks.append(indexChunk)
+    #             indexChunk = []
+    #         prevIndex = index
 
     single_palse = []
-    # print(chunks[4])
-    # print("単パルス波形の周波数？ => ", 1 / (len(chunks[4]) * (1 / rate)))
-    for index, y in enumerate(squareWaves_time):
-        if index in chunks[4]:
-            single_palse.append(y)
-        else:
-            single_palse.append(0)
-    inputWaves_time = list(single_palse)
+    ratio = len(
+        list(filter(lambda y: True if y == 1 else False, squareWaves_time))
+    ) / len(squareWaves_time)
+    # デューティー比は、パルス幅を周期で割り算したもの
+    print(f"デューティー比: {ratio * 100}%")
+    # for index, y in enumerate(squareWaves_time):
+    #     if index in chunks[4]:
+    #         single_palse.append(y)
+    #     else:
+    #         single_palse.append(0)
+    # inputWaves_time = list(single_palse)
 
     # sinc関数
     # T = np.linspace(-10, 10, 1000)
@@ -60,10 +77,13 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     FONT_SIZE = 12
 
-    axes[0].plot(T, inputWaves_time)
+    inputWaves_time = squareWaves_time
+    axes[0].plot(times, inputWaves_time)
     axes[0].set_title("input(t)")
     axes[0].set_ylabel("Gain", fontsize=FONT_SIZE)
-    axes[0].set_xlabel("time [s]", fontsize=FONT_SIZE)
+    # axes[0].set_xlabel("time [s]", fontsize=FONT_SIZE)
+    axes[0].set_xlabel("time [μs]", fontsize=FONT_SIZE)
+    axes[0].xaxis.set_major_formatter(FixedOrderFormatter(-6, useMathText=True))
 
     # フーリエ変換
     # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
@@ -84,16 +104,18 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     # 離散フーリエ変換のサンプル周波数を返す（rfft, irfftで使用するため）
     # np.fft.fftfreq(FFTを行うデータ点数, サンプリング周期) # サンプリング周期次第で時系列データの時間軸の長さが決定する（100点, 0.01）なら100 * 0.01[s]の時系列データということになる？
-    # frequencies = np.fft.fftfreq(len(inputWaves_time), 1.0 / rate)
+    # frequencies = np.fft.fftfreq(len(inputWaves_time), 1.0 / samplingFrequency)
     frequencies = np.fft.rfftfreq(
-        len(inputWaves_time), 1.0 / rate
-    )  # len(frequencies) => 193, 1/rate はサンプリング周期（何秒おきにサンプリングするか）
+        len(inputWaves_time), 1.0 / samplingFrequency
+    )  # len(frequencies) => 193, 1/samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
     # print(frequencies, len(frequencies))
 
     axes[1].plot(frequencies, np.abs(inputWaves_fft))  # absで振幅を取得
     axes[1].set_title("abs(F[input(t)])")
     axes[1].set_ylabel("|F[input(t)]|", fontsize=FONT_SIZE)
-    axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    # axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    axes[1].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
+    axes[1].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
 
     tfs = tfModules.calcTfsBySomeFreqs(
         frequencies,
@@ -104,8 +126,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[2].plot(frequencies, list(map(lambda tf: abs(tf), tfs)))
     axes[2].set_title("abs(H(f))")
     axes[2].set_ylabel("|H(f)|", fontsize=FONT_SIZE)
-    axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
-    # axes[2].set_yscale("log")
+    # axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    axes[2].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
+    axes[2].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
 
     convolution = np.array(inputWaves_fft) * np.array(
         tfs
@@ -118,24 +141,30 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[3].plot(frequencies, np.abs(convolution))  # absで振幅を取得
     axes[3].set_title("abs(F[input(t)] * H(f))")
     axes[3].set_ylabel("|F[input(t)] * H(f)|", fontsize=FONT_SIZE)
-    axes[3].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    # axes[3].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    axes[3].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
+    axes[3].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
 
     # 逆フーリエ変換
     # r = np.fft.ifft(convolution, len(T))
     # 入力波形が実数データ向けの逆FFT np.fft.irfft が用意されている。
     # 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
     # 入力波形が実数値のみなので、出力波形も虚数部分は捨ててよい？
-    r = np.fft.irfft(convolution, len(T))
-    axes[4].plot(T, np.real(r))
+    r = np.fft.irfft(convolution, len(times))
+    axes[4].plot(times, np.real(r))
     axes[4].set_title("output(t).real")
     axes[4].set_ylabel("Gain", fontsize=FONT_SIZE)
-    axes[4].set_xlabel("time [s]", fontsize=FONT_SIZE)
+    # axes[4].set_xlabel("time [s]", fontsize=FONT_SIZE)
+    axes[4].set_xlabel("time [μs]", fontsize=FONT_SIZE)
+    axes[4].xaxis.set_major_formatter(FixedOrderFormatter(-6, useMathText=True))
 
-    r = np.fft.irfft(convolution, len(T))
-    axes[5].plot(T, np.imag(r))
+    r = np.fft.irfft(convolution, len(times))
+    axes[5].plot(times, np.imag(r))
     axes[5].set_title("output(t).imag")
     axes[5].set_ylabel("Gain", fontsize=FONT_SIZE)
-    axes[5].set_xlabel("time [s]", fontsize=FONT_SIZE)
+    # axes[5].set_xlabel("time [s]", fontsize=FONT_SIZE)
+    axes[5].set_xlabel("time [μs]", fontsize=FONT_SIZE)
+    axes[5].xaxis.set_major_formatter(FixedOrderFormatter(-6, useMathText=True))
 
     plt.tight_layout()
     plt.show()
@@ -144,10 +173,9 @@ def squareWaveFftAndIfft(cable, endCondition):
 squareWaveFftAndIfft(
     # cable.Cable(
     #     resistance=1e-3,
-    #     # ケーブルの特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定
     #     inductance=100e-12 * 50 ** 2,
     #     conductance=1e-4,
-    #     capacitance=100e-12,  # シートの値を参考に設定？
+    #     capacitance=100e-12,
     #     length=1000,
     # ),
     cable.cable_vertual,

@@ -23,12 +23,22 @@ class Cable:
 
 
 # 損失有りのケーブル
+# RG58A/U
+# cable_vertual = Cable(
+#     resistance=1e-8,
+#     inductance=1e-12,
+#     conductance=0.9,
+#     capacitance=100e-12,
+#     length=1000,
+# )
+
+# 5D-2W
 cable_vertual = Cable(
     resistance=1e-8,
     inductance=1e-12,
-    conductance=0.9,
+    conductance=0.22,
     capacitance=100e-12,
-    length=1000,
+    length=100,
 )
 
 # 無損失ケーブル
@@ -50,7 +60,7 @@ exist_cables = [
     {"alphas": [7.6, 25, 125], "name": "5C-2V"},
     {"alphas": [27, 85, 420], "name": "1.5D-2V"},
     {"alphas": [13, 44, 220], "name": "3D-2V"},
-    {"alphas": [7.3, 26, 125], "name": "5D-2V"},
+    {"alphas": [7.3, 26, 125], "name": "5D-2V(5D-2W)"},
     {"alphas": [4.8, 17, 85], "name": "8D-2V"},
     {"alphas": [13, 42, 200], "name": "RG58/U"},
     {"alphas": [14, 48, 230], "name": "RG58A/U"},

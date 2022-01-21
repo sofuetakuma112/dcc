@@ -85,5 +85,5 @@ def drawAttenuationConstantByDistance(cable):
     plt.show()
 
 
-drawAttenuationConstant(list(range(0, 220 * util.ONE_HUNDRED, 10000)), cableModules.cable_vertual)
-# drawAttenuationConstantByDistance(cableModules.cable_vertual)
+# drawAttenuationConstant(list(range(0, 220 * util.ONE_HUNDRED, 10000)), cableModules.cable_vertual)
+drawAttenuationConstantByDistance(cableModules.cable_vertual)

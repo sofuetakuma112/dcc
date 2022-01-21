@@ -2,6 +2,8 @@ import matplotlib
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
+import matplotlibSettings as pltSettings
+
 
 from tqdm import tqdm
 
@@ -31,7 +33,7 @@ def drawAttenuationConstant(
     ax.set_ylabel("α [dB/km]", fontsize=FONT_SIZE)
     ax.set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     for (exist_cable, color, marker) in zip(
-        cableModules.exist_cables, util.colors, util.markers
+        cableModules.exist_cables, pltSettings.colors, pltSettings.markers
     ):
         ax.plot(
             [1e6, 10e6, 200e6],  # 1MHz, 10MHz, 200MHz
@@ -74,7 +76,7 @@ def drawAttenuationConstantByDistance(cable):
             ax.plot(
                 distances,
                 list(map(lambda distance: distance * alpha_db_km / 1000, distances)),
-                color=util.colors[j],
+                color=pltSettings.colors[j],
                 label=exist_cable["name"],
             )
         ax.set_title(f"{frequencies_Hz[i] / util.ONE_HUNDRED} [MHz]で求めた減衰定数を使用")

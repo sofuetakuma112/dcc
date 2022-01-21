@@ -72,19 +72,4 @@ def np2db(np):
     """
     return np * (20 / math.log(10))
 
-
-# matplotlibのグラフ表示に使用するオプション群
-colors = [
-    "tab:blue",
-    "tab:orange",
-    "tab:green",
-    "tab:red",
-    "tab:purple",
-    "tab:brown",
-    "tab:pink",
-    "tab:gray",
-    "tab:olive",
-]
-markers = [".", ",", "o", "v", "^", "<", ">", "1", "2"]
-
 ONE_HUNDRED = 1000000

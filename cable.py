@@ -36,9 +36,9 @@ class Cable:
 cable_vertual = Cable(
     resistance=1e-8,
     inductance=1e-12,
-    conductance=0.22,
+    conductance=0.24,
     capacitance=100e-12,
-    length=1000,
+    length=200,
 )
 
 # 無損失ケーブル

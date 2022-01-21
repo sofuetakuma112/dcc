@@ -1,22 +1,14 @@
 import matplotlib
-from matplotlib.ticker import ScalarFormatter
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
+
+import matplotlibSettings as pltSettings
 
 import numpy as np
 
 import transferFunction as tfModules
 import cable
-
-# クラス設定  ※ScalarFormatterを継承
-class FixedOrderFormatter(ScalarFormatter):
-    def __init__(self, order_of_mag=0, useOffset=True, useMathText=True):
-        self._order_of_mag = order_of_mag
-        ScalarFormatter.__init__(self, useOffset=useOffset, useMathText=useMathText)
-
-    def _set_order_of_magnitude(self):
-        self.orderOfMagnitude = self._order_of_mag
 
 
 def squareWaveFftAndIfft(cable, endCondition):
@@ -86,7 +78,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[0].set_ylabel("Gain", fontsize=FONT_SIZE)
     # axes[0].set_xlabel("time [s]", fontsize=FONT_SIZE)
     axes[0].set_xlabel("time [μs]", fontsize=FONT_SIZE)
-    axes[0].xaxis.set_major_formatter(FixedOrderFormatter(-6, useMathText=True))
+    axes[0].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(-6, useMathText=True)
+    )
 
     # フーリエ変換
     # 各離散値は、それぞれlen(離散信号列)個の複素正弦波の一次結合で表される（DFT）
@@ -118,13 +112,15 @@ def squareWaveFftAndIfft(cable, endCondition):
     # axes[1].set_ylabel("|F[input(t)]|", fontsize=FONT_SIZE)
     # # axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     # axes[1].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
-    # axes[1].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
+    # axes[1].xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
     axes[1].plot(frequencies[:10], np.abs(inputWaves_fft[:10]))  # absで振幅を取得
     axes[1].set_title("abs(F[input(t)])")
     axes[1].set_ylabel("|F[input(t)]|", fontsize=FONT_SIZE)
     # axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[1].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
-    axes[1].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
+    axes[1].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(6, useMathText=True)
+    )
 
     tfs = tfModules.calcTfsBySomeFreqs(
         frequencies,
@@ -137,7 +133,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[2].set_ylabel("|H(f)|", fontsize=FONT_SIZE)
     # axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[2].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
-    axes[2].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
+    axes[2].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(6, useMathText=True)
+    )
 
     convolution = np.array(inputWaves_fft) * np.array(
         tfs
@@ -152,7 +150,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[3].set_ylabel("|F[input(t)] * H(f)|", fontsize=FONT_SIZE)
     # axes[3].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[3].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
-    axes[3].xaxis.set_major_formatter(FixedOrderFormatter(6, useMathText=True))
+    axes[3].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(6, useMathText=True)
+    )
 
     # 逆フーリエ変換
     # r = np.fft.ifft(convolution, len(T))
@@ -165,7 +165,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[4].set_ylabel("Gain", fontsize=FONT_SIZE)
     # axes[4].set_xlabel("time [s]", fontsize=FONT_SIZE)
     axes[4].set_xlabel("time [μs]", fontsize=FONT_SIZE)
-    axes[4].xaxis.set_major_formatter(FixedOrderFormatter(-6, useMathText=True))
+    axes[4].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(-6, useMathText=True)
+    )
 
     r = np.fft.irfft(convolution, len(times))
     axes[5].plot(times, np.imag(r))
@@ -173,7 +175,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     axes[5].set_ylabel("Gain", fontsize=FONT_SIZE)
     # axes[5].set_xlabel("time [s]", fontsize=FONT_SIZE)
     axes[5].set_xlabel("time [μs]", fontsize=FONT_SIZE)
-    axes[5].xaxis.set_major_formatter(FixedOrderFormatter(-6, useMathText=True))
+    axes[5].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(-6, useMathText=True)
+    )
 
     plt.tight_layout()
     plt.show()

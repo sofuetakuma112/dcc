@@ -31,10 +31,10 @@ def squareWaveFftAndIfft(cable, endCondition):
     )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
     # len(times) => 1000
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
-    # squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
+    squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
 
     # 周波数f[Hz]の振幅1の正弦波形の時間関数を表している。
-    squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
+    # squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
 
     # prevIndex = 0
     # indexChunk = []
@@ -132,7 +132,7 @@ def squareWaveFftAndIfft(cable, endCondition):
         cable,
     )
 
-    axes[2].plot(frequencies, list(map(lambda tf: abs(tf), tfs)))
+    axes[2].plot(frequencies[:10], list(map(lambda tf: abs(tf), tfs))[:10])
     axes[2].set_title("abs(H(f))")
     axes[2].set_ylabel("|H(f)|", fontsize=FONT_SIZE)
     # axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
@@ -147,7 +147,7 @@ def squareWaveFftAndIfft(cable, endCondition):
     # )
 
     # 入力波形のフーリエ変換 * 伝達関数
-    axes[3].plot(frequencies, np.abs(convolution))  # absで振幅を取得
+    axes[3].plot(frequencies[:10], np.abs(convolution)[:10])  # absで振幅を取得
     axes[3].set_title("abs(F[input(t)] * H(f))")
     axes[3].set_ylabel("|F[input(t)] * H(f)|", fontsize=FONT_SIZE)
     # axes[3].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
@@ -188,5 +188,5 @@ squareWaveFftAndIfft(
     #     length=1000,
     # ),
     cable.cable_vertual,
-    {"shouldMatching": False, "impedance": 1e-6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+    {"shouldMatching": False, "impedance": 1e6},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 )

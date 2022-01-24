@@ -34,12 +34,19 @@ class Cable:
 
 # 5D-2W
 cable_vertual = Cable(
-    resistance=1e-8,
-    inductance=1e-12,
-    conductance=0.24,
-    capacitance=100e-12,
-    length=200,
+    resistance=0,
+    inductance=2.5e-7,
+    conductance=0.00011973985981029357,
+    capacitance=1e-10,
+    length=300,
 )
+# cable_vertual = Cable(
+#     resistance=1e-8,
+#     inductance=3e-9,
+#     conductance=1e-4,
+#     capacitance=1e-12,
+#     length=300,
+# )
 
 # 無損失ケーブル
 # 特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定

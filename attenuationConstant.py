@@ -4,6 +4,7 @@ matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
 import matplotlibSettings as pltSettings
 
+import numpy as np
 
 from tqdm import tqdm
 
@@ -11,9 +12,11 @@ import cable as cableModules
 import util
 
 
-def drawAttenuationConstant(
-    frequencies_Hz, cable, ax=plt.subplots()[1], shouldShowOneGlaph=True
+def drawAttenuationConstantAndCharaImpedance(
+    frequencies_Hz, cable, shouldShowOneGlaph=True
 ):
+    fig, axes = plt.subplots(2, 1)
+
     # 周波数ごとにalphaを求める
     alphas_db = []
     for frequency_Hz in tqdm(frequencies_Hz, leave=False):
@@ -23,19 +26,21 @@ def drawAttenuationConstant(
         alphas_db.append(alpha_db)
     # 縦軸alpha, 横軸周波数でプロットする(alphaの値を1000倍して単位をdb/kmにしてプロットする？)
     FONT_SIZE = 12
-    ax.plot(
+    axes[0].plot(
         frequencies_Hz,
         list(map(lambda x: x * 1000, alphas_db)),
         label="vertual cable",
         zorder=5,
     )  # absで振幅を取得
-    ax.set_title("周波数ごとの減衰定数の推移")
-    ax.set_ylabel("α [dB/km]", fontsize=FONT_SIZE)
-    ax.set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    axes[0].set_title("周波数ごとの減衰定数の推移")
+    axes[0].set_ylabel("α [dB/km]", fontsize=FONT_SIZE)
+    axes[0].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+    axes[0].set_xscale("log")
+    axes[0].set_yscale("log")
     for (exist_cable, color, marker) in zip(
         cableModules.exist_cables, pltSettings.colors, pltSettings.markers
     ):
-        ax.plot(
+        axes[0].plot(
             [1e6, 10e6, 200e6],  # 1MHz, 10MHz, 200MHz
             exist_cable["alphas"],
             marker=marker,
@@ -43,7 +48,14 @@ def drawAttenuationConstant(
             # linestyle="",
             label=exist_cable["name"],
         )
-        ax.legend()
+        axes[0].legend()
+
+    characteristicImpedances = []
+    for frequency_Hz in list(frequencies_Hz):
+        characteristicImpedances.append(
+            cableModules.cable_vertual.calcCharacteristicImpedance(frequency_Hz)
+        )
+    axes[1].plot(frequencies_Hz, np.abs(characteristicImpedances))
 
     if shouldShowOneGlaph:
         plt.tight_layout()
@@ -87,5 +99,23 @@ def drawAttenuationConstantByDistance(cable):
     plt.show()
 
 
-# drawAttenuationConstant(list(range(0, 220 * util.ONE_HUNDRED, 10000)), cableModules.cable_vertual)
-drawAttenuationConstantByDistance(cableModules.cable_vertual)
+drawAttenuationConstantAndCharaImpedance(
+    list(range(0, 220 * util.ONE_HUNDRED, 10000)), cableModules.cable_vertual
+)
+# drawAttenuationConstantByDistance(cableModules.cable_vertual)
+
+print(
+    util.calcConductanceFromAttenuationConstant(
+        util.ONE_HUNDRED, cableModules.cable_vertual, 7.3 / 1000
+    )
+)
+print(
+    util.calcConductanceFromAttenuationConstant(
+        10 * util.ONE_HUNDRED, cableModules.cable_vertual, 26 / 1000
+    )
+)
+print(
+    util.calcConductanceFromAttenuationConstant(
+        200 * util.ONE_HUNDRED, cableModules.cable_vertual, 125 / 1000
+    )
+)

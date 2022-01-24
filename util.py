@@ -61,6 +61,18 @@ def calcAttenuationConstant(frequency, cable):
     )
 
 
+def calcConductanceFromAttenuationConstant(frequency, cable, alpha_db):
+    # dB/m => Np/mに変換する
+    alpha_np = db2np(alpha_db)
+    L = cable.inductance
+    C = cable.capacitance
+    omega = 2 * np.pi * frequency
+    return np.sqrt(
+        ((2 * alpha_np ** 2 + omega ** 2 * L * C) / (omega * L)) ** 2
+        - omega ** 2 * C ** 2
+    )
+
+
 def np2db(np):
     """
     ネーパをデジベルに変換する
@@ -71,5 +83,18 @@ def np2db(np):
         ネーパ(Np)
     """
     return np * (20 / math.log(10))
+
+
+def db2np(db):
+    """
+    デジベルをネーパに変換する
+
+    Parameters
+    ----------
+    np : float
+        ネーパ(Np)
+    """
+    return db * (math.log(10) / 20)
+
 
 ONE_HUNDRED = 1000000

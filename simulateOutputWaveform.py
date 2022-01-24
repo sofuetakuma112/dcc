@@ -12,7 +12,6 @@ import cable
 
 
 def squareWaveFftAndIfft(cable, endCondition):
-    # f = 1000
     input_wave_frequency = 1e6  # 1[MHz]
     samplingFrequency = (
         input_wave_frequency * 1000
@@ -60,15 +59,15 @@ def squareWaveFftAndIfft(cable, endCondition):
     # sincWaves_time = np.sinc(T)
     # inputWaves_time = sincWaves_time
 
-    fig, axes = plt.subplots(3, 2)
-    axes = axes.flatten()
-    # fig, axes = plt.subplots()
-    # fig, axes1 = plt.subplots()
-    # fig, axes2 = plt.subplots()
-    # fig, axes3 = plt.subplots()
-    # fig, axes4 = plt.subplots()
-    # fig, axes5 = plt.subplots()
-    # axes = [axes, axes1, axes2, axes3, axes4, axes5]
+    # fig, axes = plt.subplots(3, 2)
+    # axes = axes.flatten()
+    fig, axes = plt.subplots()
+    fig, axes1 = plt.subplots()
+    fig, axes2 = plt.subplots()
+    fig, axes3 = plt.subplots()
+    fig, axes4 = plt.subplots()
+    fig, axes5 = plt.subplots()
+    axes = [axes, axes1, axes2, axes3, axes4, axes5]
 
     FONT_SIZE = 12
 
@@ -159,7 +158,21 @@ def squareWaveFftAndIfft(cable, endCondition):
     # 入力波形が実数データ向けの逆FFT np.fft.irfft が用意されている。
     # 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
     # 入力波形が実数値のみなので、出力波形も虚数部分は捨ててよい？
+
     r = np.fft.irfft(convolution, len(times))
+
+    # timesList = [*times]
+    # rs = [*np.real(r)]
+    # for i in range(3):
+    #     timeCoef = i + 1
+    #     times_moved_positive = list(map(lambda t: t + timeCoef * 1e-6, times))
+    #     time_moved_negative = list(map(lambda t: t - timeCoef * 1e-6, times))
+    #     timesList = [*time_moved_negative, *timesList, *times_moved_positive]
+    #     rs = [*np.real(r), *rs, *np.real(r)]
+    # axes[4].plot(timesList, rs)
+    # axes[4].set_xticks([-2.5e-6, -2e-6, -1e-6, 0, 1e-6, 2e-6, 2.5e-6])
+    # axes[4].set_xlim(-2.5e-6, 2.5e-6)
+
     axes[4].plot(times, np.real(r))
     axes[4].set_title("output(t).real")
     axes[4].set_ylabel("Gain", fontsize=FONT_SIZE)
@@ -184,13 +197,6 @@ def squareWaveFftAndIfft(cable, endCondition):
 
 
 squareWaveFftAndIfft(
-    # cable.Cable(
-    #     resistance=1e-3,
-    #     inductance=100e-12 * 50 ** 2,
-    #     conductance=1e-4,
-    #     capacitance=100e-12,
-    #     length=1000,
-    # ),
     cable.cable_vertual,
     {"shouldMatching": False, "impedance": 50},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 )

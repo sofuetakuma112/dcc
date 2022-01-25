@@ -34,12 +34,19 @@ class Cable:
 
 # 5D-2W
 cable_vertual = Cable(
-    resistance=0,
-    inductance=2.5e-7,
-    conductance=0.00011973985981029357,
-    capacitance=1e-10,
+    resistance=1e-8,
+    inductance=3e-9,
+    conductance=1e-4,
+    capacitance=1e-14,
     length=300,
 )
+# cable_vertual = Cable(
+#     resistance=5e-9,
+#     inductance=3e-10, # L小 => 切片小, Zo小
+#     conductance=1e-3, # G大 => alphaが直線になる, 切片大, Zoの曲線が緩やかになる, Zo小
+#     capacitance=1e-12, # C大 => alphaが曲がる, Zoの曲線が直線になる, Zo小
+#     length=300,
+# )
 # cable_vertual = Cable(
 #     resistance=1e-8,
 #     inductance=3e-9,

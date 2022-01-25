@@ -104,18 +104,18 @@ drawAttenuationConstantAndCharaImpedance(
 )
 # drawAttenuationConstantByDistance(cableModules.cable_vertual)
 
-print(
-    util.calcConductanceFromAttenuationConstant(
-        util.ONE_HUNDRED, cableModules.cable_vertual, 7.3 / 1000
-    )
-)
-print(
-    util.calcConductanceFromAttenuationConstant(
-        10 * util.ONE_HUNDRED, cableModules.cable_vertual, 26 / 1000
-    )
-)
-print(
-    util.calcConductanceFromAttenuationConstant(
-        200 * util.ONE_HUNDRED, cableModules.cable_vertual, 125 / 1000
-    )
-)
+# print(
+#     util.calcConductanceFromAttenuationConstant(
+#         util.ONE_HUNDRED, cableModules.cable_vertual, 7.3 / 1000
+#     )
+# )
+# print(
+#     util.calcConductanceFromAttenuationConstant(
+#         10 * util.ONE_HUNDRED, cableModules.cable_vertual, 26 / 1000
+#     )
+# )
+# print(
+#     util.calcConductanceFromAttenuationConstant(
+#         200 * util.ONE_HUNDRED, cableModules.cable_vertual, 125 / 1000
+#     )
+# )

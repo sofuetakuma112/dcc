@@ -174,6 +174,7 @@ def squareWaveFftAndIfft(cable, endCondition):
     # axes[4].set_xlim(-2.5e-6, 2.5e-6)
 
     axes[4].plot(times, np.real(r))
+
     axes[4].set_title("output(t).real")
     axes[4].set_ylabel("Gain", fontsize=FONT_SIZE)
     # axes[4].set_xlabel("time [s]", fontsize=FONT_SIZE)

@@ -11,6 +11,7 @@ from tqdm import tqdm
 import util
 import cable
 import transferFunction as tfModules
+import matplotlibSettings as pltSettings
 
 
 def drawBodePlot(frequencies_Hz, endCondition, cable, fileName=""):
@@ -96,7 +97,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     resonance_freqs_open = []  # 共振周波数
     antiresonance_freqs_open = []  # 反共振周波数
     # 整数n
-    n_length = range(10)
+    n_length = range(1)
     for n in n_length:
         # 共振周波数
         resonance_freq_open = n / resonance_denominator_open
@@ -127,10 +128,11 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 
         ax.plot(
             frequencies_Hz,
-            list(map(abs, tfs)),
-            # list(map(util.convertGain2dB, tfs)),
+            # list(map(abs, tfs)),
+            list(map(util.convertGain2dB, tfs)),
         )
         if cable.resistance == 0 and cable.conductance == 0:
+        # if True:
             # 無損失ケーブル
             if i == 1:
                 # open
@@ -138,6 +140,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     resonance_freqs_open,
                     list(
                         map(
+                            # lambda tf: util.convertGain2dB(tf),
                             abs,
                             tfModules.calcTfsBySomeFreqs(
                                 resonance_freqs_open, condition, cable
@@ -152,6 +155,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     antiresonance_freqs_open,
                     list(
                         map(
+                            # lambda tf: util.convertGain2dB(tf),
                             abs,
                             tfModules.calcTfsBySomeFreqs(
                                 antiresonance_freqs_open, condition, cable
@@ -169,7 +173,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     resonance_freqs_short,
                     list(
                         map(
-                            abs,
+                            # lambda tf: util.convertGain2dB(tf),
+                            abs,                            
                             tfModules.calcTfsBySomeFreqs(
                                 resonance_freqs_short, condition, cable
                             ),
@@ -183,6 +188,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     antiresonance_freqs_short[1:],
                     list(
                         map(
+                            # lambda tf: util.convertGain2dB(tf),
                             abs,
                             tfModules.calcTfsBySomeFreqs(
                                 antiresonance_freqs_short[1:], condition, cable
@@ -203,9 +209,12 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         )
         FONT_SIZE = 12
         ax.set_title(f"{text}")
-        ax.set_ylabel("|H(f)|", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
-        ax.set_xlabel("frequency [Hz]", fontsize=FONT_SIZE)
-        ax.set_yscale("log")  # y軸はlogスケールで表示する
+        ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
+        ax.set_xlabel("frequency [MHz]", fontsize=FONT_SIZE)
+        # ax.set_yscale("log")  # y軸はlogスケールで表示する
+        ax.xaxis.set_major_formatter(
+            pltSettings.FixedOrderFormatter(6, useMathText=True)
+        )
         ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
         if cable.resistance == 0 and cable.conductance == 0:
             if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
@@ -218,9 +227,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     plt.show()
 
 
-# ケーブルの周波数特性をグラフにする
-frequencies_Hz = list(range(0, 10000, 10))
-frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 # drawBodePlot(
 #     np.logspace(4, 6, 1000, base=10),
 #     {"shouldMatching": False, "impedance": 1e6},
@@ -233,13 +239,7 @@ frequencies_Hz.extend(list(range(10000, 200 * 10 ** 6, 10000)))
 # )
 
 drawFrequencyResponse(
+    # list(range(500 * 1000, 50 * util.ONE_HUNDRED, 1000)),
     list(range(0, util.ONE_HUNDRED, 1000)),
-    # cable.Cable(
-    #     resistance=1e-3,
-    #     inductance=100e-12 * 50 ** 2,  # C * Zo ** 2
-    #     conductance=1e-4,
-    #     capacitance=100e-12,
-    #     length=1000,
-    # ),
     cable.cable_vertual,
 )

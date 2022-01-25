@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 import numpy as np
-
+import math
 import matplotlib
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 import cable as cableModules
 import util
 import matplotlibSettings as pltSettings
+import transferFunction as tfModules
 
 root = tk.Tk()  # ウインドの作成
 root.title("減衰特性と特性インピーダンスの周波数特性")  # ウインドのタイトル
@@ -50,11 +51,16 @@ def graph(*args):
     conductance = G * 10 ** (-1 * G_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
 
-    drawFrequencyResponse(resistance, inductance, conductance, capacitance, axes)
+    # drawFrequencyResponseOfAlphaAndCharaImpedance(
+    #     resistance, inductance, conductance, capacitance, axes
+    # )
+    drawFrequencyResponseOfTf(
+        resistance, inductance, conductance, capacitance, axes
+    )
     canvas.draw()
 
 
-def drawFrequencyResponse(R, L, G, C, axes):
+def drawFrequencyResponseOfAlphaAndCharaImpedance(R, L, G, C, axes):
     # Cableインスタンスの作成
     cable = cableModules.Cable(
         resistance=R,
@@ -103,6 +109,144 @@ def drawFrequencyResponse(R, L, G, C, axes):
     for frequency_Hz in list(frequencies_Hz):
         characteristicImpedances.append(cable.calcCharacteristicImpedance(frequency_Hz))
     axes[1].plot(frequencies_Hz, np.abs(characteristicImpedances))
+    # axes[1].set_xscale("log")
+    # axes[1].set_yscale("log")
+
+
+def drawFrequencyResponseOfTf(R, L, G, C, axes):
+    # Cableインスタンスの作成
+    cable = cableModules.Cable(
+        resistance=R,
+        inductance=L,
+        conductance=G,
+        capacitance=C,
+        length=10,  # alphaとZoの計算には関係ないので適用な値で初期化
+    )
+
+    # 共振周波数の分母
+    resonance_denominator_open = (
+        2 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
+    )
+    # 反共振周波数の分母
+    antiresonance_denominator_open = (
+        4 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
+    )
+
+    # 開放
+    resonance_freqs_open = []  # 開放条件時の共振周波数
+    antiresonance_freqs_open = []  # 開放条件時の反共振周波数
+    # 整数n
+    n_length = range(1)
+    for n in n_length:
+        # TODO: 開放時と短絡時の共振周波数、反共振周波数の式が逆になっている可能性があるので調査する
+        # 共振周波数
+        resonance_freq_open = n / resonance_denominator_open
+        resonance_freqs_open.append(resonance_freq_open)
+        # 反共振周波数
+        antiresonance_freq_open = (2 * n + 1) / antiresonance_denominator_open
+        antiresonance_freqs_open.append(antiresonance_freq_open)
+    resonance_freqs_short = antiresonance_freqs_open  # 短絡条件時の共振周波数
+    antiresonance_freqs_short = resonance_freqs_open  # 短絡条件時の反共振周波数
+
+    conditions = [
+        {"shouldMatching": False, "impedance": 1e6},
+        {"shouldMatching": False, "impedance": 1e-6},
+    ]
+    for (i, condition) in enumerate(conditions):
+        tfs = []
+        for frequency_Hz in frequencies_Hz:
+            tf = tfModules.createTransferFunction(frequency_Hz, condition, cable)
+            tfs.append(tf)
+
+        axes[i].plot(
+            frequencies_Hz,
+            # list(map(abs, tfs)),
+            list(map(util.convertGain2dB, tfs)),
+        )
+        if cable.resistance == 0 and cable.conductance == 0:
+            # if True:
+            # 無損失ケーブル
+            if i == 1:
+                # open
+                axes[i].plot(
+                    resonance_freqs_open,
+                    list(
+                        map(
+                            # lambda tf: util.convertGain2dB(tf),
+                            abs,
+                            tfModules.calcTfsBySomeFreqs(
+                                resonance_freqs_open, condition, cable
+                            ),
+                        )
+                    ),
+                    marker="v",
+                    color="blue",
+                    linestyle="",
+                )
+                axes[i].plot(
+                    antiresonance_freqs_open,
+                    list(
+                        map(
+                            # lambda tf: util.convertGain2dB(tf),
+                            abs,
+                            tfModules.calcTfsBySomeFreqs(
+                                antiresonance_freqs_open, condition, cable
+                            ),
+                        )
+                    ),
+                    marker="o",
+                    color="red",
+                    linestyle="",
+                )
+                axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
+            elif i == 2:
+                # short
+                axes[i].plot(
+                    resonance_freqs_short,
+                    list(
+                        map(
+                            # lambda tf: util.convertGain2dB(tf),
+                            abs,
+                            tfModules.calcTfsBySomeFreqs(
+                                resonance_freqs_short, condition, cable
+                            ),
+                        )
+                    ),
+                    marker="v",
+                    color="blue",
+                    linestyle="",
+                )
+                axes[i].plot(
+                    antiresonance_freqs_short[1:],
+                    list(
+                        map(
+                            # lambda tf: util.convertGain2dB(tf),
+                            abs,
+                            tfModules.calcTfsBySomeFreqs(
+                                antiresonance_freqs_short[1:], condition, cable
+                            ),
+                        )
+                    ),
+                    marker="o",
+                    color="red",
+                    linestyle="",
+                )
+                axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
+        text = (
+            "matching"
+            if condition["shouldMatching"]
+            else "open"
+            if condition["impedance"] >= 1e6
+            else "short"
+        )
+        FONT_SIZE = 12
+        axes[i].set_title(f"{text}")
+        axes[i].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
+        axes[i].set_xlabel("frequency [MHz]", fontsize=FONT_SIZE)
+        axes[i].xaxis.set_major_formatter(
+            pltSettings.FixedOrderFormatter(6, useMathText=True)
+        )
+        axes[i].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
 
 
 # スクロールバーの初期値を設定
@@ -124,7 +268,12 @@ capacitance = C * 10 ** (-1 * C_nthOf10_negative)
 fig = plt.Figure()
 fig, axes = plt.subplots(2, 1)
 
-drawFrequencyResponse(resistance, inductance, conductance, capacitance, axes)
+# drawFrequencyResponseOfAlphaAndCharaImpedance(
+#     resistance, inductance, conductance, capacitance, axes
+# )
+drawFrequencyResponseOfTf(
+    resistance, inductance, conductance, capacitance, axes
+)
 
 # tkinterのウインド上部にグラフを表示する
 canvas = FigureCanvasTkAgg(fig, master=frame_1)

@@ -83,32 +83,31 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         表示するグラフを保存する際のファイル名
     """
 
-    # open
-    # 共振周波数の分母
+    # 共振周波数の分母（開放条件）
     resonance_denominator_open = (
-        2 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
-    )
-    # 反共振周波数の分母
-    antiresonance_denominator_open = (
         4 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
+    )
+    # 反共振周波数の分母（開放条件）
+    antiresonance_denominator_open = (
+        2 * cable.length * math.sqrt(cable.inductance * cable.capacitance)
     )
 
     # 開放
-    resonance_freqs_open = []  # 共振周波数
-    antiresonance_freqs_open = []  # 反共振周波数
+    resonance_freqs_open = []  # 開放条件時の共振周波数
+    antiresonance_freqs_open = []  # 開放条件時の反共振周波数
     # 整数n
-    n_length = range(1)
+    n_length = range(0)  # range(3)だと, 0 ~ 2
     for n in n_length:
-        # 共振周波数
-        resonance_freq_open = n / resonance_denominator_open
+        # 共振周波数（開放）
+        # nは0から
+        resonance_freq_open = (2 * n + 1) / resonance_denominator_open
         resonance_freqs_open.append(resonance_freq_open)
-        # 反共振周波数
-        antiresonance_freq_open = (2 * n + 1) / antiresonance_denominator_open
+        # 反共振周波数（開放）
+        # nは1から
+        antiresonance_freq_open = (n + 1) / antiresonance_denominator_open
         antiresonance_freqs_open.append(antiresonance_freq_open)
-    # 引数のfrequencies_Hzに一番近い
-    # 短絡
-    resonance_freqs_short = antiresonance_freqs_open  # 共振周波数
-    antiresonance_freqs_short = resonance_freqs_open  # 反共振周波数
+    resonance_freqs_short = antiresonance_freqs_open  # 短絡条件時の共振周波数
+    antiresonance_freqs_short = resonance_freqs_open  # 短絡条件時の反共振周波数
 
     conditions = [
         {"shouldMatching": True, "impedance": 0},
@@ -132,7 +131,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             list(map(util.convertGain2dB, tfs)),
         )
         if cable.resistance == 0 and cable.conductance == 0:
-        # if True:
+            # if True:
             # 無損失ケーブル
             if i == 1:
                 # open
@@ -140,8 +139,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     resonance_freqs_open,
                     list(
                         map(
-                            # lambda tf: util.convertGain2dB(tf),
-                            abs,
+                            util.convertGain2dB,
+                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 resonance_freqs_open, condition, cable
                             ),
@@ -155,8 +154,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     antiresonance_freqs_open,
                     list(
                         map(
-                            # lambda tf: util.convertGain2dB(tf),
-                            abs,
+                            util.convertGain2dB,
+                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 antiresonance_freqs_open, condition, cable
                             ),
@@ -173,8 +172,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     resonance_freqs_short,
                     list(
                         map(
-                            # lambda tf: util.convertGain2dB(tf),
-                            abs,                            
+                            util.convertGain2dB,
+                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 resonance_freqs_short, condition, cable
                             ),
@@ -188,8 +187,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     antiresonance_freqs_short[1:],
                     list(
                         map(
-                            # lambda tf: util.convertGain2dB(tf),
-                            abs,
+                            util.convertGain2dB,
+                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 antiresonance_freqs_short[1:], condition, cable
                             ),
@@ -216,9 +215,9 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             pltSettings.FixedOrderFormatter(6, useMathText=True)
         )
         ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-        if cable.resistance == 0 and cable.conductance == 0:
-            if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
-                ax.set_ylim(1e-1, 1e3)
+        # if cable.resistance == 0 and cable.conductance == 0:
+        #     if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
+        #         ax.set_ylim(1e-1, 1e3)
 
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))
@@ -240,6 +239,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 
 drawFrequencyResponse(
     # list(range(500 * 1000, 50 * util.ONE_HUNDRED, 1000)),
-    list(range(0, util.ONE_HUNDRED, 1000)),
+    list(range(0, 30 * util.ONE_HUNDRED, 1000)),
     cable.cable_vertual,
 )

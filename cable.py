@@ -24,13 +24,13 @@ class Cable:
 
 # 損失有りのケーブル
 # RG58A/U
-# cable_vertual = Cable(
-#     resistance=1e-8,
-#     inductance=1e-12,
-#     conductance=0.9,
-#     capacitance=100e-12,
-#     length=10,
-# )
+cable_vertual = Cable(
+    resistance=1e-8,
+    inductance=3.21e-17 / 9.77e-11, # LC / CでLを求めている(LCは[1/(4 * l * np.sqrt(LC))]から求めた)
+    conductance=1e-2,
+    capacitance=9.77e-11,
+    length=6,
+)
 
 # 5D-2W
 # cable_vertual = Cable(
@@ -47,14 +47,6 @@ class Cable:
 #     capacitance=1e-12,
 #     length=300,
 # )
-
-cable_vertual = Cable(
-    resistance=1e-2,
-    inductance=1e-10,  # C * Zo ** 2 から求めた
-    conductance=1e-2,
-    capacitance=1e-6,
-    length=10,
-)
 
 # 無損失ケーブル
 # 特性インピーダンスの計算結果が50[Ω]になるように意図的に値を設定

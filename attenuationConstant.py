@@ -45,7 +45,6 @@ def drawAttenuationConstantAndCharaImpedance(
             exist_cable["alphas"],
             marker=marker,
             color=color,
-            # linestyle="",
             label=exist_cable["name"],
         )
         axes[0].legend()
@@ -99,10 +98,10 @@ def drawAttenuationConstantByDistance(cable):
     plt.show()
 
 
-# drawAttenuationConstantAndCharaImpedance(
-#     list(range(0, 220 * util.ONE_HUNDRED, 10000)), cableModules.cable_vertual
-# )
-drawAttenuationConstantByDistance(cableModules.cable_vertual)
+drawAttenuationConstantAndCharaImpedance(
+    list(range(0, 220 * util.ONE_HUNDRED, 10000)), cableModules.cable_vertual
+)
+# drawAttenuationConstantByDistance(cableModules.cable_vertual)
 
 # print(
 #     util.calcConductanceFromAttenuationConstant(

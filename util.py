@@ -38,7 +38,7 @@ def calcMinimumSlope(tfs_nthPwrOf10):
 
 def calcAttenuationConstant(frequency, cable):
     """
-    引数の周波数、ケーブル情報から減衰定数を求める
+    引数の周波数、ケーブル情報から減衰定数[Np/m]を求める
 
     Parameters
     ----------
@@ -82,7 +82,7 @@ def np2db(np):
     np : float
         ネーパ(Np)
     """
-    return np * (20 / math.log(10))
+    return np * (20 / math.log(10)) # Np/mを約8.68倍している
 
 
 def db2np(db):
@@ -95,6 +95,23 @@ def db2np(db):
         ネーパ(Np)
     """
     return db * (math.log(10) / 20)
+
+
+def getNearestNumber(list, num):
+    """
+    listの中でnumに最も近い値を返却する関数
+
+    Parameters
+    ----------
+    list : list
+        データ配列
+    num: float
+        対象値
+    """
+
+    # リスト要素と対象値の差分を計算し最小値のインデックスを取得
+    idx = np.abs(np.asarray(list) - num).argmin()
+    return list[idx]
 
 
 ONE_HUNDRED = 1000000

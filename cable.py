@@ -1,4 +1,3 @@
-import cmath
 import numpy as np
 
 
@@ -16,7 +15,7 @@ class Cable:
         omega = 2 * np.pi * frequency_Hz
         if omega == 0:
             omega = 1e-8  # ZeroDivisionError回避
-        return cmath.sqrt(
+        return np.sqrt(
             (self.resistance + 1j * omega * self.inductance)
             / (self.conductance + 1j * omega * self.capacitance)
         )

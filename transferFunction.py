@@ -1,7 +1,7 @@
-import cmath
-
 import numpy as np
 from tqdm import tqdm
+
+import util
 
 
 def calculateTheta(frequency_Hz, cable):
@@ -22,7 +22,7 @@ def calculateTheta(frequency_Hz, cable):
     G = cable.conductance  # S/m
     C = cable.capacitance  # F/m
 
-    gamma = cmath.sqrt((R + 1j * omega * L) * (G + 1j * omega * C))
+    gamma = np.sqrt((R + 1j * omega * L) * (G + 1j * omega * C))
     theta = gamma * cable.length
 
     return theta
@@ -42,8 +42,8 @@ def createFMatrixForDcc(frequency_Hz, theta, cable):
         Cableクラスのインスタンス
     """
 
-    cosh = cmath.cosh(theta)
-    sinh = cmath.sinh(theta)
+    cosh = np.cosh(theta)
+    sinh = np.sinh(theta)
     return np.array(
         [
             [cosh, cable.calcCharacteristicImpedance(frequency_Hz) * sinh],

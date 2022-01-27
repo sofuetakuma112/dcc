@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-import cmath
 from tqdm import tqdm
 import util
 import cable

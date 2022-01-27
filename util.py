@@ -61,6 +61,31 @@ def calcAttenuationConstant(frequency, cable):
     )
 
 
+def calcPhaseConstant(frequency, cable):
+    """
+    引数の周波数、ケーブル情報から位相定数[rad/m]を求める
+
+    Parameters
+    ----------
+    frequency : float
+        周波数[Hz]
+    cable: instance
+        Cableインスタンス
+    """
+    omega = 2 * np.pi * frequency
+    R = cable.resistance
+    L = cable.inductance
+    G = cable.conductance
+    C = cable.capacitance
+    return np.sqrt(
+        (
+            np.sqrt((R ** 2 + omega ** 2 * L ** 2) * (G ** 2 + omega ** 2 * C ** 2))
+            - (R * G - omega ** 2 * L * C)
+        )
+        / 2
+    )
+
+
 def calcConductanceFromAttenuationConstant(frequency, cable, alpha_db):
     # dB/m => Np/mに変換する
     alpha_np = db2np(alpha_db)
@@ -82,7 +107,7 @@ def np2db(np):
     np : float
         ネーパ(Np)
     """
-    return np * (20 / math.log(10)) # Np/mを約8.68倍している
+    return np * (20 / math.log(10))  # Np/mを約8.68倍している
 
 
 def db2np(db):
@@ -114,4 +139,5 @@ def getNearestNumber(list, num):
     return list[idx]
 
 
+ONE_THUOSAND = 1000
 ONE_HUNDRED = 1000000

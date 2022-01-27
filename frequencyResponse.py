@@ -116,8 +116,8 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     ]
     for (i, condition) in enumerate(conditions):
         # ケーブルが損失あり、かつマッチング条件のときスキップ
-        if (cable.resistance != 0 or cable.conductance != 0) and i == 0:
-            continue
+        # if (cable.resistance != 0 or cable.conductance != 0) and i == 0:
+        #     continue
         fig, ax = plt.subplots()
 
         tfs = []

@@ -50,9 +50,10 @@ def graph(*args):
     text_display_C.set(str(value_C))
 
     resistance = R * 10 ** (-1 * R_nthOf10_negative)
-    inductance = L * 10 ** (-1 * L_nthOf10_negative)
-    conductance = G * 10 ** (-1 * G_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
+    inductance = 3.21e-17 / capacitance
+    # inductance = L * 10 ** (-1 * L_nthOf10_negative)
+    conductance = G * 10 ** (-1 * G_nthOf10_negative)
 
     # drawFrequencyResponseOfAlphaAndCharaImpedance(
     #     resistance, inductance, conductance, capacitance, axes
@@ -120,11 +121,10 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     # Cableインスタンスの作成
     cable = cableModules.Cable(
         resistance=R,
-        inductance=3.21e-17 / C,
-        # inductance=L,
+        inductance=L,
         conductance=G,
         capacitance=C,
-        length=6,  # alphaとZoの計算には関係ないので適用な値で初期化
+        length=6,
     )
 
     # 共振周波数の分母（開放条件）
@@ -179,7 +179,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
                 resonance_freqs_open,
                 list(
                     map(
-                        lambda tf: util.convertGain2dB(tf),
+                        util.convertGain2dB,
                         tfModules.calcTfsBySomeFreqs(
                             resonance_freqs_open, condition, cable
                         ),
@@ -193,7 +193,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
                 antiresonance_freqs_open,
                 list(
                     map(
-                        lambda tf: util.convertGain2dB(tf),
+                        util.convertGain2dB,
                         # abs,
                         tfModules.calcTfsBySomeFreqs(
                             antiresonance_freqs_open, condition, cable
@@ -211,7 +211,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
                 resonance_freqs_short,
                 list(
                     map(
-                        lambda tf: util.convertGain2dB(tf),
+                        util.convertGain2dB,
                         # abs,
                         tfModules.calcTfsBySomeFreqs(
                             resonance_freqs_short, condition, cable
@@ -226,7 +226,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
                 antiresonance_freqs_short[1:],
                 list(
                     map(
-                        lambda tf: util.convertGain2dB(tf),
+                        util.convertGain2dB,
                         # abs,
                         tfModules.calcTfsBySomeFreqs(
                             antiresonance_freqs_short[1:], condition, cable
@@ -298,7 +298,7 @@ baseNum = 0
 scale_var = tk.DoubleVar()
 scale_var.set(R)  # スクロールバーの初期値設定？
 scale_var.trace("w", graph)
-scale = ttk.Scale(frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var)
+scale = ttk.Scale(frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var)
 scale.grid(row=baseNum + 1, column=0)
 # リアクタンスのテキスト
 text = tk.Label(frame_2, text="リアクタンス:R")
@@ -316,7 +316,7 @@ scale_var_int.trace("w", graph)
 spinbox = ttk.Spinbox(frame_2, from_=0, to=15, textvariable=scale_var_int)
 spinbox.grid(row=baseNum + 3, column=0)
 # リアクタンス_10のn乗のテキスト
-text_nthOf10 = tk.Label(frame_2, text="リアクタンス_10のマイナスn乗:R")
+text_nthOf10 = tk.Label(frame_2, text="10のマイナスn乗")
 text_nthOf10.grid(row=baseNum + 2, column=0)
 # # リアクタンス_10のn乗の数値表示テキスト
 # text_display_nthOf10 = tk.StringVar()
@@ -331,7 +331,7 @@ scale_var_L = tk.DoubleVar()
 scale_var_L.set(L)
 scale_var_L.trace("w", graph)
 scale_L = ttk.Scale(
-    frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var_L
+    frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var_L
 )
 scale_L.grid(row=baseNum + 1, column=0)
 # # インダクタンスのテキスト
@@ -350,7 +350,7 @@ scale_var_L_int.trace("w", graph)
 spinbox_L = ttk.Spinbox(frame_2, from_=0, to=15, textvariable=scale_var_L_int)
 spinbox_L.grid(row=baseNum + 3, column=0)
 # インダクタンス_10のn乗のテキスト
-text_L_nthOf10 = tk.Label(frame_2, text="インダクタンス_10のマイナスn乗:R")
+text_L_nthOf10 = tk.Label(frame_2, text="10のマイナスn乗")
 text_L_nthOf10.grid(row=baseNum + 2, column=0)
 
 # row: 8 ~ 11
@@ -360,7 +360,7 @@ scale_var_G = tk.DoubleVar()
 scale_var_G.set(G)
 scale_var_G.trace("w", graph)
 scale_G = ttk.Scale(
-    frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var_G
+    frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var_G
 )
 scale_G.grid(row=baseNum + 1, column=0)
 # コンダクタンスのテキスト
@@ -379,7 +379,7 @@ scale_var_G_int.trace("w", graph)
 spinbox_G = ttk.Spinbox(frame_2, from_=0, to=15, textvariable=scale_var_G_int)
 spinbox_G.grid(row=baseNum + 3, column=0)
 # コンダクタンス_10のn乗のテキスト
-text_G_nthOf10 = tk.Label(frame_2, text="コンダクタンス_10のマイナスn乗:R")
+text_G_nthOf10 = tk.Label(frame_2, text="10のマイナスn乗")
 text_G_nthOf10.grid(row=baseNum + 2, column=0)
 
 # row: 12 ~ 15
@@ -389,7 +389,7 @@ scale_var_C = tk.DoubleVar()
 scale_var_C.set(C)
 scale_var_C.trace("w", graph)
 scale_C = ttk.Scale(
-    frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var_C
+    frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var_C
 )
 scale_C.grid(row=baseNum + 1, column=0)
 # キャパシタンスのテキスト
@@ -408,7 +408,7 @@ scale_var_C_int.trace("w", graph)
 spinbox_C = ttk.Spinbox(frame_2, from_=0, to=15, textvariable=scale_var_C_int)
 spinbox_C.grid(row=baseNum + 3, column=0)
 # キャパシタンス_10のn乗のテキスト
-text_C_nthOf10 = tk.Label(frame_2, text="キャパシタンス_10のマイナスn乗:R")
+text_C_nthOf10 = tk.Label(frame_2, text="10のマイナスn乗")
 text_C_nthOf10.grid(row=baseNum + 2, column=0)
 
 root.mainloop()

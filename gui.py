@@ -25,7 +25,7 @@ frame_2 = tk.LabelFrame(root, labelanchor="nw", text="パラメータ", foregrou
 frame_2.grid(row=0, column=1, sticky="nwse")
 
 # frequencies_Hz = list(range(0, 220 * util.ONE_HUNDRED, 100000))
-frequencies_Hz = list(range(500 * 1000, 30 * util.ONE_HUNDRED, 10000))
+frequencies_Hz = list(range(500 * 1000, 100 * util.ONE_HUNDRED, 100000))
 
 # スケールバーが動いたらその値を読み取りグラフを更新する
 def graph(*args):
@@ -51,7 +51,7 @@ def graph(*args):
 
     resistance = R * 10 ** (-1 * R_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-    inductance = 3.21e-17 / capacitance
+    inductance = 4.82e-17 / capacitance
     # inductance = L * 10 ** (-1 * L_nthOf10_negative)
     conductance = G * 10 ** (-1 * G_nthOf10_negative)
 
@@ -274,7 +274,7 @@ C_nthOf10_negative = 7
 resistance = R * 10 ** (-1 * R_nthOf10_negative)
 conductance = G * 10 ** (-1 * G_nthOf10_negative)
 capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-inductance = 3.21e-17 / capacitance
+inductance = 4.82e-17 / capacitance
 # inductance = L * 10 ** (-1 * L_nthOf10_negative)
 
 fig = plt.Figure()
@@ -298,7 +298,7 @@ baseNum = 0
 scale_var = tk.DoubleVar()
 scale_var.set(R)  # スクロールバーの初期値設定？
 scale_var.trace("w", graph)
-scale = ttk.Scale(frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var)
+scale = ttk.Scale(frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var)
 scale.grid(row=baseNum + 1, column=0)
 # リアクタンスのテキスト
 text = tk.Label(frame_2, text="リアクタンス:R")
@@ -331,7 +331,7 @@ scale_var_L = tk.DoubleVar()
 scale_var_L.set(L)
 scale_var_L.trace("w", graph)
 scale_L = ttk.Scale(
-    frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var_L
+    frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var_L
 )
 scale_L.grid(row=baseNum + 1, column=0)
 # # インダクタンスのテキスト
@@ -360,7 +360,7 @@ scale_var_G = tk.DoubleVar()
 scale_var_G.set(G)
 scale_var_G.trace("w", graph)
 scale_G = ttk.Scale(
-    frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var_G
+    frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var_G
 )
 scale_G.grid(row=baseNum + 1, column=0)
 # コンダクタンスのテキスト
@@ -389,7 +389,7 @@ scale_var_C = tk.DoubleVar()
 scale_var_C.set(C)
 scale_var_C.trace("w", graph)
 scale_C = ttk.Scale(
-    frame_2, from_=1, to=10, length=300, orient="h", variable=scale_var_C
+    frame_2, from_=1, to=10, length=150, orient="h", variable=scale_var_C
 )
 scale_C.grid(row=baseNum + 1, column=0)
 # キャパシタンスのテキスト

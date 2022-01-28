@@ -1,12 +1,27 @@
 import numpy as np
 from tqdm import tqdm
 
-import util
-
 
 def calculateTheta(frequency_Hz, cable):
     """
     伝搬定数γと同軸ケーブルの長さlの積を求める
+
+    Parameters
+    ----------
+    frequency_Hz : float
+        周波数(Hz)
+    cable : instance
+        Cableクラスのインスタンス
+    """
+    gamma = calcGamma(frequency_Hz, cable)
+    theta = gamma * cable.length
+
+    return theta
+
+
+def calcGamma(frequency_Hz, cable):
+    """
+    伝搬定数γを求める
 
     Parameters
     ----------
@@ -23,9 +38,8 @@ def calculateTheta(frequency_Hz, cable):
     C = cable.capacitance  # F/m
 
     gamma = np.sqrt((R + 1j * omega * L) * (G + 1j * omega * C))
-    theta = gamma * cable.length
 
-    return theta
+    return gamma
 
 
 def createFMatrixForDcc(frequency_Hz, theta, cable):
@@ -91,7 +105,7 @@ def createTransferFunctionFromFMatrix(resistance, f_matrix):
     f_matrix: ndarray
         F行列
     """
-    R1 = 0  # 入力側の抵抗は0で考える
+    R1 = 50  # 入力側の抵抗は0で考える
     R2 = resistance
 
     A = f_matrix[0][0]

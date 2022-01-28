@@ -12,9 +12,11 @@ import cable
 
 
 def squareWaveFftAndIfft(cable, endCondition):
-    input_wave_frequency = 1e6  # 1[MHz]
+    # input_wave_frequency = 1e6  # 1[MHz]
+    input_wave_frequency = 1e4
+    timeLength = 1000
     samplingFrequency = (
-        input_wave_frequency * 1000
+        input_wave_frequency * timeLength
     )  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
     # 方形波
     times = np.arange(
@@ -23,6 +25,13 @@ def squareWaveFftAndIfft(cable, endCondition):
     # len(times) => 1000
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
     squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
+
+    # 指定したDuty比になるようリストの数値を調整する
+    dutyRate = 50  # [%]
+    squareWaves_time = [-1] * (timeLength)
+    for i in range(int(timeLength * dutyRate / 100)):
+        squareWaves_time[i] = 1
+    squareWaves_time = [0] + squareWaves_time
 
     # 周波数f[Hz]の振幅1の正弦波形の時間関数を表している。
     # squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)

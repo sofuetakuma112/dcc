@@ -51,7 +51,7 @@ def graph(*args):
 
     resistance = R * 10 ** (-1 * R_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-    inductance = 4.82e-17 / capacitance
+    inductance = (1 / (4500000 * 24) ** 2) / capacitance
     # inductance = L * 10 ** (-1 * L_nthOf10_negative)
     conductance = G * 10 ** (-1 * G_nthOf10_negative)
 
@@ -59,6 +59,10 @@ def graph(*args):
     #     resistance, inductance, conductance, capacitance, axes
     # )
     drawFrequencyResponseOfTf(resistance, inductance, conductance, capacitance, axes)
+    # calcEndVoltByAnyFreqUnderEndOpenCondition(
+    #     resistance, inductance, conductance, capacitance, axes
+    # )
+
     canvas.draw()
 
 
@@ -260,6 +264,70 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     axes[1].plot(frequencies_Hz, np.abs(characteristicImpedances))
 
 
+def calcEndVoltByAnyFreqUnderEndOpenCondition(
+    R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]
+):
+    t = 0
+    cable = cableModules.Cable(
+        resistance=R,
+        inductance=L,
+        conductance=G,
+        capacitance=C,
+        length=6,  # alphaとZoの計算には関係ないので適用な値で初期化
+    )
+    # cable = cableModules.cable_vertual
+    amp_input_volt = 1000  # 入力電圧のPeek値が1000V
+
+    x = cable.length  # 受電端の電圧を見る
+    l = cable.length  # 線路の長さ
+
+    gains = []
+    for frequency_Hz in frequencies_Hz:
+        alpha = util.calcAttenuationConstant(frequency_Hz, cable)
+        beta = util.calcPhaseConstant(frequency_Hz, cable)
+        gamma = alpha + 1j * beta
+        omega = 2 * np.pi * frequency_Hz
+
+        cosh = np.cosh(gamma * l)
+        theta = np.arctan((cosh * -1).imag / (cosh * -1).real)  # 位相遅れ
+
+        gains.append(
+            (
+                (-1 * amp_input_volt / abs(np.cosh(gamma * l)))
+                * (
+                    (
+                        (1 / 2)
+                        * np.exp(-1 * alpha * x + alpha * l)
+                        * np.cos(omega * t + beta * l - beta * x - theta)
+                    )
+                    + (
+                        (1 / 2)
+                        * np.exp(alpha * x - alpha * l)
+                        * np.cos(omega * t - beta * l + beta * x - theta)
+                    )
+                )
+            )
+            / amp_input_volt
+        )
+
+    FONT_SIZE = 12
+    axes[0].plot(
+        frequencies_Hz,
+        list(
+            map(
+                util.convertGain2dB,
+                gains,
+            )
+        ),
+    )
+    axes[0].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
+    axes[0].set_xlabel("frequency [MHz]", fontsize=FONT_SIZE)
+    axes[0].xaxis.set_major_formatter(
+        pltSettings.FixedOrderFormatter(6, useMathText=True)
+    )
+    axes[0].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+
+
 # スクロールバーの初期値を設定
 R = 1
 L = 3
@@ -274,11 +342,11 @@ C_nthOf10_negative = 7
 resistance = R * 10 ** (-1 * R_nthOf10_negative)
 conductance = G * 10 ** (-1 * G_nthOf10_negative)
 capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-inductance = 4.82e-17 / capacitance
+inductance = (1 / (4500000 * 24) ** 2) / capacitance
 # inductance = L * 10 ** (-1 * L_nthOf10_negative)
 
 fig = plt.Figure()
-fig, axes = plt.subplots(2, 1, figsize=(8,8))
+fig, axes = plt.subplots(2, 1, figsize=(8, 8))
 # fig, ax = plt.subplots()
 # axes = [ax]
 
@@ -286,6 +354,9 @@ fig, axes = plt.subplots(2, 1, figsize=(8,8))
 #     resistance, inductance, conductance, capacitance, axes
 # )
 drawFrequencyResponseOfTf(resistance, inductance, conductance, capacitance, axes)
+# calcEndVoltByAnyFreqUnderEndOpenCondition(
+#     resistance, inductance, conductance, capacitance, axes
+# )
 
 # tkinterのウインド上部にグラフを表示する
 canvas = FigureCanvasTkAgg(fig, master=frame_1)

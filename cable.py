@@ -25,9 +25,10 @@ class Cable:
 # RG58A/U
 cable_vertual = Cable(
     resistance=1e-8,
-    inductance=3.21e-17 / 9.77e-11, # LC / CでLを求めている(LCは[1/(4 * l * np.sqrt(LC))]から求めた)
-    conductance=1e-2,
-    capacitance=9.77e-11,
+    inductance=(1 / (4500000 * 4 * 6) ** 2)
+    / 9.77e-11,  # LC / CでLを求めている(LCは[1/(4 * l * np.sqrt(LC))]から求めた)
+    conductance=1e-5,
+    capacitance=9.31e-11,
     length=6,
 )
 

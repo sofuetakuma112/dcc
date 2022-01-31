@@ -51,7 +51,8 @@ def graph(*args):
 
     resistance = R * 10 ** (-1 * R_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-    inductance = (1 / (4500000 * 24) ** 2) / capacitance
+    # inductance = (1 / (4000000 * 24) ** 2) / capacitance
+    inductance = (1 / (4000000 * 24) ** 2) / capacitance
     # inductance = L * 10 ** (-1 * L_nthOf10_negative)
     conductance = G * 10 ** (-1 * G_nthOf10_negative)
 
@@ -75,7 +76,7 @@ def drawFrequencyResponseOfAlphaAndCharaImpedance(
         inductance=L,
         conductance=G,
         capacitance=C,
-        length=100,  # alphaとZoの計算には関係ないので適用な値で初期化
+        length=6,  # alphaとZoの計算には関係ないので適用な値で初期化
     )
     # 周波数ごとにalphaを求める
     alphas_db = []
@@ -158,7 +159,8 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     antiresonance_freqs_short = resonance_freqs_open  # 短絡条件時の反共振周波数
 
     conditions = [
-        {"shouldMatching": False, "impedance": 1e6},
+        # {"shouldMatching": False, "impedance": 1e6},
+        {"shouldMatching": False, "impedance": 50},
         # {"shouldMatching": False, "impedance": 1e-6},
     ]
     for (i, condition) in enumerate(conditions):
@@ -342,7 +344,8 @@ C_nthOf10_negative = 7
 resistance = R * 10 ** (-1 * R_nthOf10_negative)
 conductance = G * 10 ** (-1 * G_nthOf10_negative)
 capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-inductance = (1 / (4500000 * 24) ** 2) / capacitance
+# inductance = (1 / (4000000 * 24) ** 2) / capacitance
+inductance = 1.08e-16 / capacitance
 # inductance = L * 10 ** (-1 * L_nthOf10_negative)
 
 fig = plt.Figure()

@@ -13,16 +13,18 @@ import cable
 
 def squareWaveFftAndIfft(cable, endCondition):
     # input_wave_frequency = 1e6  # 1[MHz]
-    input_wave_frequency = 1e4
+    input_wave_frequency = 100e3 # 100[kHz]
     timeLength = 1000
     samplingFrequency = (
         input_wave_frequency * timeLength
     )  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
-    # 方形波
+    # np.arange(0, 10, 1) => [0 1 2 3 4 5 6 7 8 9]
     times = np.arange(
         0, 1 / input_wave_frequency, 1 / samplingFrequency
     )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
-    # len(times) => 1000
+    if len(times) != timeLength:
+        times = times[:-1]
+    print(len(times))
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
     squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
 
@@ -31,7 +33,11 @@ def squareWaveFftAndIfft(cable, endCondition):
     squareWaves_time = [-1] * (timeLength)
     for i in range(int(timeLength * dutyRate / 100)):
         squareWaves_time[i] = 1
-    squareWaves_time = [0] + squareWaves_time
+    # squareWaves_time = [-1] + squareWaves_time
+    squareWaves_time[0] = -1
+    coef = 0.5
+    squareWaves_time = [n * coef for n in squareWaves_time]
+    print(len(times), len(squareWaves_time))
 
     # 周波数f[Hz]の振幅1の正弦波形の時間関数を表している。
     # squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
@@ -52,7 +58,7 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     # single_palse = []
     ratio = len(
-        list(filter(lambda y: True if y == 1 else False, squareWaves_time))
+        list(filter(lambda y: True if y == 1 * coef else False, squareWaves_time))
     ) / len(squareWaves_time)
     # デューティー比は、パルス幅を周期で割り算したもの
     print(f"デューティー比: {ratio * 100}%")

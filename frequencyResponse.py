@@ -110,7 +110,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     antiresonance_freqs_short = resonance_freqs_open  # 短絡条件時の反共振周波数
 
     conditions = [
-        {"shouldMatching": True, "impedance": 0},
+        {"shouldMatching": False, "impedance": 50},
         {"shouldMatching": False, "impedance": 1e6},
         {"shouldMatching": False, "impedance": 1e-6},
     ]
@@ -206,6 +206,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             if condition["impedance"] >= 1e6
             else "short"
         )
+        text = f"受電端側の抵抗値{condition['impedance']}[Ω]"
         FONT_SIZE = 12
         ax.set_title(f"{text}")
         ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値

@@ -96,7 +96,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
     resonance_freqs_open = []  # 開放条件時の共振周波数
     antiresonance_freqs_open = []  # 開放条件時の反共振周波数
     # 整数n
-    n_length = range(0)  # range(3)だと, 0 ~ 2
+    n_length = range(5)  # range(3)だと, 0 ~ 2
     for n in n_length:
         # 共振周波数（開放）
         # nは0から
@@ -104,13 +104,15 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         resonance_freqs_open.append(resonance_freq_open)
         # 反共振周波数（開放）
         # nは1から
-        antiresonance_freq_open = (n + 1) / antiresonance_denominator_open
+        if n == 0:
+            continue
+        antiresonance_freq_open = n / antiresonance_denominator_open
         antiresonance_freqs_open.append(antiresonance_freq_open)
     resonance_freqs_short = antiresonance_freqs_open  # 短絡条件時の共振周波数
     antiresonance_freqs_short = resonance_freqs_open  # 短絡条件時の反共振周波数
 
     conditions = [
-        {"shouldMatching": False, "impedance": 50},
+        {"shouldMatching": True, "impedance": 50},
         {"shouldMatching": False, "impedance": 1e6},
         {"shouldMatching": False, "impedance": 1e-6},
     ]
@@ -127,15 +129,13 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 
         ax.plot(
             frequencies_Hz,
-            # list(map(abs, tfs)),
+            # np.abs(tfs),
             list(map(util.convertGain2dB, tfs)),
         )
         if cable.resistance == 0 and cable.conductance == 0:
-            # if True:
-            # 無損失ケーブル
             if i == 1:
                 # open
-                ax.plot(
+                ax.scatter(
                     resonance_freqs_open,
                     list(
                         map(
@@ -146,11 +146,11 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                             ),
                         )
                     ),
-                    marker="v",
+                    # marker="v",
                     color="blue",
-                    linestyle="",
+                    # linestyle="",
                 )
-                ax.plot(
+                ax.scatter(
                     antiresonance_freqs_open,
                     list(
                         map(
@@ -161,14 +161,14 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                             ),
                         )
                     ),
-                    marker="o",
+                    # marker="o",
                     color="red",
-                    linestyle="",
+                    # linestyle="",
                 )
                 ax.legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
             elif i == 2:
                 # short
-                ax.plot(
+                ax.scatter(
                     resonance_freqs_short,
                     list(
                         map(
@@ -179,24 +179,24 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                             ),
                         )
                     ),
-                    marker="v",
+                    # marker="v",
                     color="blue",
-                    linestyle="",
+                    # linestyle="",
                 )
-                ax.plot(
-                    antiresonance_freqs_short[1:],
+                ax.scatter(
+                    antiresonance_freqs_short,
                     list(
                         map(
                             util.convertGain2dB,
                             # abs,
                             tfModules.calcTfsBySomeFreqs(
-                                antiresonance_freqs_short[1:], condition, cable
+                                antiresonance_freqs_short, condition, cable
                             ),
                         )
                     ),
-                    marker="o",
+                    # marker="o",
                     color="red",
-                    linestyle="",
+                    # linestyle="",
                 )
                 ax.legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         text = (
@@ -206,7 +206,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             if condition["impedance"] >= 1e6
             else "short"
         )
-        text = f"受電端側の抵抗値{condition['impedance']}[Ω]"
+        text = f"受電端側の抵抗値{'{:.2e}'.format(condition['impedance'])}[Ω]"
         FONT_SIZE = 12
         ax.set_title(f"{text}")
         ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
@@ -215,10 +215,10 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         ax.xaxis.set_major_formatter(
             pltSettings.FixedOrderFormatter(6, useMathText=True)
         )
-        ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-        # if cable.resistance == 0 and cable.conductance == 0:
-        #     if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
-        #         ax.set_ylim(1e-1, 1e3)
+        if cable.resistance == 0 and cable.conductance == 0:
+            # 最大値と最小値の差がほぼない場合, y軸のスケールを変更する
+            if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
+                ax.set_ylim(-10, 10)
 
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))
@@ -239,7 +239,10 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 # )
 
 drawFrequencyResponse(
-    # list(range(500 * 1000, 50 * util.ONE_HUNDRED, 1000)),
-    list(range(0, 30 * util.ONE_HUNDRED, 1000)),
+    # 無損失ケーブル用
+    # list(range(0, 5 * util.ONE_HUNDRED, 1000)),
+    # cable.cable_noLoss_vertual,
+    # 損失ありケーブル用
+    list(range(0, 100 * util.ONE_HUNDRED, 10000)),
     cable.cable_vertual,
 )

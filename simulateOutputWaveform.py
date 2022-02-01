@@ -35,7 +35,7 @@ def squareWaveFftAndIfft(cable, endCondition):
         squareWaves_time[i] = 1
     # squareWaves_time = [-1] + squareWaves_time
     squareWaves_time[0] = -1
-    coef = 0.5
+    coef = 1
     squareWaves_time = [n * coef for n in squareWaves_time]
     print(len(times), len(squareWaves_time))
 
@@ -212,7 +212,9 @@ def squareWaveFftAndIfft(cable, endCondition):
     plt.show()
 
 
+# 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    {"shouldMatching": False, "impedance": 50},  # 受電端の抵抗が0のとき、断線していない正常のケーブル？
+    # {"shouldMatching": False, "impedance": 1e6},
+    {"shouldMatching": False, "impedance": 50},
 )

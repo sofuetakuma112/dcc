@@ -7,7 +7,8 @@ import matplotlibSettings as pltSettings
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("csv/T3DSO2204A_CSV_C1_1.csv", skiprows=11)
+# df = pd.read_csv("csv/T3DSO2204A_CSV_C1_1.csv", skiprows=11)
+df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
 seconds = list(df["Second"])
 values = list(df["Value"])
 
@@ -19,6 +20,11 @@ ax.set_title("input(t)")
 ax.set_ylabel("Gain", fontsize=FONT_SIZE)
 ax.set_xlabel("time [μs]", fontsize=FONT_SIZE)
 ax.xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(-6, useMathText=True))
+
+df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
+seconds = list(df["Second"])
+values = list(df["Value"])
+ax.plot(seconds, values)
 
 plt.tight_layout()
 plt.show()

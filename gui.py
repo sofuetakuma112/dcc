@@ -51,8 +51,7 @@ def graph(*args):
 
     resistance = R * 10 ** (-1 * R_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-    # inductance = (1 / (4000000 * 24) ** 2) / capacitance
-    inductance = (1 / (4000000 * 24) ** 2) / capacitance
+    inductance = (1 / (5500000 * 24) ** 2) / capacitance
     # inductance = L * 10 ** (-1 * L_nthOf10_negative)
     conductance = G * 10 ** (-1 * G_nthOf10_negative)
 
@@ -159,7 +158,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     antiresonance_freqs_short = resonance_freqs_open  # 短絡条件時の反共振周波数
 
     conditions = [
-        # {"shouldMatching": False, "impedance": 1e6},
+        {"shouldMatching": False, "impedance": 1e6},
         {"shouldMatching": False, "impedance": 50},
         # {"shouldMatching": False, "impedance": 1e-6},
     ]
@@ -263,7 +262,27 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     characteristicImpedances = []
     for frequency_Hz in list(frequencies_Hz):
         characteristicImpedances.append(cable.calcCharacteristicImpedance(frequency_Hz))
-    axes[1].plot(frequencies_Hz, np.abs(characteristicImpedances))
+    
+    # axes[1].plot(frequencies_Hz, np.abs(characteristicImpedances))
+
+    # thetas = [tfModules.calculateTheta(freq, cable) for freq in frequencies_Hz]
+    # axes[1].plot(
+    #     frequencies_Hz,
+    #     list(map(lambda theta: util.np2db(np.real(theta) * 1000), thetas)),
+    #     label="α * l",
+    # )
+    # axes[1].scatter(
+    #     [1e6, 10e6],
+    #     [14, 48],
+    #     label="α * l",
+    # )
+    # axes[1].set_title("周波数ごとの伝搬定数の推移")
+    # axes[1].set_ylabel("alpha[dB/km]", fontsize=FONT_SIZE)
+    # axes[1].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
+    # axes[1].xaxis.set_major_formatter(
+    #     pltSettings.FixedOrderFormatter(6, useMathText=True)
+    # )
+    # axes[1].legend()
 
 
 def calcEndVoltByAnyFreqUnderEndOpenCondition(
@@ -344,8 +363,7 @@ C_nthOf10_negative = 7
 resistance = R * 10 ** (-1 * R_nthOf10_negative)
 conductance = G * 10 ** (-1 * G_nthOf10_negative)
 capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-# inductance = (1 / (4000000 * 24) ** 2) / capacitance
-inductance = 1.08e-16 / capacitance
+inductance = (1 / (5500000 * 24) ** 2) / capacitance
 # inductance = L * 10 ** (-1 * L_nthOf10_negative)
 
 fig = plt.Figure()

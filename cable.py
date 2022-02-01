@@ -24,12 +24,14 @@ class Cable:
 # 損失有りのケーブル
 # RG58A/U
 # capacitance = 2e-10 # インピーダンスの周波数特性で合わせた
-capacitance = 9.46e-11 # 伝達関数の周波数特性で合わせた
+# capacitance = 9.46e-11 # 伝達関数の周波数特性で合わせた
+# capacitance = 1e-10 # 伝達関数の周波数特性で合わせた(R1 = 0で考えた, G = 2.2e-3)
+capacitance = 7.25e-11 # 伝達関数の周波数特性で合わせた
 cable_vertual = Cable(
     resistance=1e-8,
-    inductance=(1 / (4000000 * 4 * 6) ** 2)
+    inductance=(1 / (5.5e6 * 4 * 6) ** 2)
     / capacitance,  # LC / CでLを求めている(LCは[1/(4 * l * np.sqrt(LC))]から求めた)
-    conductance=1e-4,
+    conductance=1e-5,
     capacitance=capacitance,
     length=6,
 )
@@ -57,7 +59,7 @@ cable_noLoss_vertual = Cable(
     inductance=100e-12 * 50 ** 2,  # C * Zo ** 2 から求めた
     conductance=0,
     capacitance=100e-12,
-    length=1000,
+    length=100,
 )
 
 # データシートの値をpythonのデータ構造で表現したもの

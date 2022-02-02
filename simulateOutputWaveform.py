@@ -14,6 +14,7 @@ import cable
 def squareWaveFftAndIfft(cable, endCondition):
     # input_wave_frequency = 1e6  # 1[MHz]
     input_wave_frequency = 100e3 # 100[kHz]
+    # input_wave_frequency = 10e6 # 10[MHz]
     timeLength = 1000
     samplingFrequency = (
         input_wave_frequency * timeLength
@@ -24,20 +25,18 @@ def squareWaveFftAndIfft(cable, endCondition):
     )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
     if len(times) != timeLength:
         times = times[:-1]
-    print(len(times))
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
     squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
 
     # 指定したDuty比になるようリストの数値を調整する
     dutyRate = 50  # [%]
-    squareWaves_time = [-1] * (timeLength)
+    squareWaves_time = [0] * (timeLength)
     for i in range(int(timeLength * dutyRate / 100)):
         squareWaves_time[i] = 1
-    # squareWaves_time = [-1] + squareWaves_time
-    squareWaves_time[0] = -1
-    coef = 1
+    # squareWaves_time = [0] + squareWaves_time
+    squareWaves_time[0] = 0
+    coef = 2
     squareWaves_time = [n * coef for n in squareWaves_time]
-    print(len(times), len(squareWaves_time))
 
     # 周波数f[Hz]の振幅1の正弦波形の時間関数を表している。
     # squareWaves_time = np.sin(2 * np.pi * input_wave_frequency * times)
@@ -88,8 +87,8 @@ def squareWaveFftAndIfft(cable, endCondition):
 
     inputWaves_time = squareWaves_time
     axes[0].plot(times, inputWaves_time)
-    axes[0].set_title("input(t)")
-    axes[0].set_ylabel("Gain", fontsize=FONT_SIZE)
+    # axes[0].set_title("入力波形")
+    axes[0].set_ylabel("Vin[V]", fontsize=FONT_SIZE)
     # axes[0].set_xlabel("time [s]", fontsize=FONT_SIZE)
     axes[0].set_xlabel("time [μs]", fontsize=FONT_SIZE)
     axes[0].xaxis.set_major_formatter(
@@ -215,6 +214,6 @@ def squareWaveFftAndIfft(cable, endCondition):
 # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    # {"shouldMatching": False, "impedance": 1e6},
-    {"shouldMatching": False, "impedance": 50},
+    {"shouldMatching": False, "impedance": 1e6},
+    # {"shouldMatching": False, "impedance": 50},
 )

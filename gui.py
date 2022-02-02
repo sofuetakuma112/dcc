@@ -30,7 +30,7 @@ frequencies_Hz = list(range(500 * 1000, 100 * util.ONE_HUNDRED, 100000))
 # スケールバーが動いたらその値を読み取りグラフを更新する
 def graph(*args):
     axes[0].cla()
-    axes[1].cla()
+    # axes[1].cla()
     R = scale_var.get()
     L = scale_var_L.get()
     G = scale_var_G.get()
@@ -159,11 +159,10 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
 
     conditions = [
         {"shouldMatching": False, "impedance": 1e6},
-        {"shouldMatching": False, "impedance": 50},
+        # {"shouldMatching": False, "impedance": 50},
         # {"shouldMatching": False, "impedance": 1e-6},
     ]
     for (i, condition) in enumerate(conditions):
-
         tfs = list(
             map(
                 lambda frequency_Hz: tfModules.createTransferFunction(
@@ -172,83 +171,82 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
                 frequencies_Hz,
             )
         )
-
         axes[i].plot(
             frequencies_Hz,
             # list(map(abs, tfs)),
             list(map(util.convertGain2dB, tfs)),
         )
-        if i == 0:
-            # open
-            axes[i].plot(
-                resonance_freqs_open,
-                list(
-                    map(
-                        util.convertGain2dB,
-                        tfModules.calcTfsBySomeFreqs(
-                            resonance_freqs_open, condition, cable
-                        ),
-                    )
-                ),
-                marker="v",
-                color="blue",
-                linestyle="",
-            )
-            axes[i].plot(
-                antiresonance_freqs_open,
-                list(
-                    map(
-                        util.convertGain2dB,
-                        # abs,
-                        tfModules.calcTfsBySomeFreqs(
-                            antiresonance_freqs_open, condition, cable
-                        ),
-                    )
-                ),
-                marker="o",
-                color="red",
-                linestyle="",
-            )
-            axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
-        elif i == 1:
-            # short
-            axes[i].plot(
-                resonance_freqs_short,
-                list(
-                    map(
-                        util.convertGain2dB,
-                        # abs,
-                        tfModules.calcTfsBySomeFreqs(
-                            resonance_freqs_short, condition, cable
-                        ),
-                    )
-                ),
-                marker="v",
-                color="blue",
-                linestyle="",
-            )
-            axes[i].plot(
-                antiresonance_freqs_short[1:],
-                list(
-                    map(
-                        util.convertGain2dB,
-                        # abs,
-                        tfModules.calcTfsBySomeFreqs(
-                            antiresonance_freqs_short[1:], condition, cable
-                        ),
-                    )
-                ),
-                marker="o",
-                color="red",
-                linestyle="",
-            )
-            axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
+        # if i == 0:
+        #     # open
+        #     axes[i].plot(
+        #         resonance_freqs_open,
+        #         list(
+        #             map(
+        #                 util.convertGain2dB,
+        #                 tfModules.calcTfsBySomeFreqs(
+        #                     resonance_freqs_open, condition, cable
+        #                 ),
+        #             )
+        #         ),
+        #         marker="v",
+        #         color="blue",
+        #         linestyle="",
+        #     )
+        #     axes[i].plot(
+        #         antiresonance_freqs_open,
+        #         list(
+        #             map(
+        #                 util.convertGain2dB,
+        #                 # abs,
+        #                 tfModules.calcTfsBySomeFreqs(
+        #                     antiresonance_freqs_open, condition, cable
+        #                 ),
+        #             )
+        #         ),
+        #         marker="o",
+        #         color="red",
+        #         linestyle="",
+        #     )
+        #     axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
+        # elif i == 1:
+        #     # short
+        #     axes[i].plot(
+        #         resonance_freqs_short,
+        #         list(
+        #             map(
+        #                 util.convertGain2dB,
+        #                 # abs,
+        #                 tfModules.calcTfsBySomeFreqs(
+        #                     resonance_freqs_short, condition, cable
+        #                 ),
+        #             )
+        #         ),
+        #         marker="v",
+        #         color="blue",
+        #         linestyle="",
+        #     )
+        #     axes[i].plot(
+        #         antiresonance_freqs_short[1:],
+        #         list(
+        #             map(
+        #                 util.convertGain2dB,
+        #                 # abs,
+        #                 tfModules.calcTfsBySomeFreqs(
+        #                     antiresonance_freqs_short[1:], condition, cable
+        #                 ),
+        #             )
+        #         ),
+        #         marker="o",
+        #         color="red",
+        #         linestyle="",
+        #     )
+        #     axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         text = (
-            "matching"
+            "インピーダンスマッチング条件における周波数特性"
             if condition["shouldMatching"]
-            else "open"
+            else "受電端開放条件における周波数特性"
             if condition["impedance"] >= 1e6
-            else "short"
+            else "受電端短絡条件における周波数特性"
         )
         FONT_SIZE = 12
         axes[i].set_title(f"{text}")
@@ -262,7 +260,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     characteristicImpedances = []
     for frequency_Hz in list(frequencies_Hz):
         characteristicImpedances.append(cable.calcCharacteristicImpedance(frequency_Hz))
-    
+
     # axes[1].plot(frequencies_Hz, np.abs(characteristicImpedances))
 
     # thetas = [tfModules.calculateTheta(freq, cable) for freq in frequencies_Hz]
@@ -353,12 +351,12 @@ def calcEndVoltByAnyFreqUnderEndOpenCondition(
 R = 1
 L = 3
 G = 1
-C = 1
+C = 1.02
 
 R_nthOf10_negative = 8
 L_nthOf10_negative = 9
 G_nthOf10_negative = 4
-C_nthOf10_negative = 7
+C_nthOf10_negative = 10
 
 resistance = R * 10 ** (-1 * R_nthOf10_negative)
 conductance = G * 10 ** (-1 * G_nthOf10_negative)
@@ -366,10 +364,14 @@ capacitance = C * 10 ** (-1 * C_nthOf10_negative)
 inductance = (1 / (5500000 * 24) ** 2) / capacitance
 # inductance = L * 10 ** (-1 * L_nthOf10_negative)
 
+number, power = str(inductance).split("e-")
+L = float(number[:4])
+L_nthOf10_negative = int(power)
+
 fig = plt.Figure()
-fig, axes = plt.subplots(2, 1, figsize=(8, 8))
-# fig, ax = plt.subplots()
-# axes = [ax]
+# fig, axes = plt.subplots(2, 1, figsize=(8, 8))
+fig, ax = plt.subplots()
+axes = [ax]
 
 # drawFrequencyResponseOfAlphaAndCharaImpedance(
 #     resistance, inductance, conductance, capacitance, axes
@@ -397,7 +399,7 @@ text = tk.Label(frame_2, text="リアクタンス:R")
 text.grid(row=baseNum, column=0)
 # リアクタンスの数値表示テキスト
 text_display = tk.StringVar()
-text_display.set(str(R))
+text_display.set("{:.3e}".format(R * 10 ** (-1 * R_nthOf10_negative)))
 label = tk.Label(frame_2, textvariable=text_display)
 label.grid(row=baseNum + 1, column=1)
 
@@ -431,7 +433,7 @@ text_L = tk.Label(frame_2, text="インダクタンス:L")
 text_L.grid(row=baseNum, column=0)
 # インダクタンスの数値表示テキスト
 text_display_L = tk.StringVar()
-text_display_L.set(str(L))
+text_display_L.set("{:.3e}".format(L * 10 ** (-1 * L_nthOf10_negative)))
 label_L = tk.Label(frame_2, textvariable=text_display_L)
 label_L.grid(row=baseNum + 1, column=1)
 
@@ -460,7 +462,7 @@ text_G = tk.Label(frame_2, text="コンダクタンス:G")
 text_G.grid(row=baseNum, column=0)
 # コンダクタンスの数値表示テキスト
 text_display_G = tk.StringVar()
-text_display_G.set(str(G))
+text_display_G.set("{:.3e}".format(G * 10 ** (-1 * G_nthOf10_negative)))
 label_G = tk.Label(frame_2, textvariable=text_display_G)
 label_G.grid(row=baseNum + 1, column=1)
 
@@ -489,7 +491,7 @@ text_C = tk.Label(frame_2, text="キャパシタンス:C")
 text_C.grid(row=baseNum, column=0)
 # キャパシタンスの数値表示テキスト
 text_display_C = tk.StringVar()
-text_display_C.set(str(C))
+text_display_C.set("{:.3e}".format(C * 10 ** (-1 * C_nthOf10_negative)))
 label_C = tk.Label(frame_2, textvariable=text_display_C)
 label_C.grid(row=baseNum + 1, column=1)
 

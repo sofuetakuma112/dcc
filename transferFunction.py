@@ -105,7 +105,8 @@ def createTransferFunctionFromFMatrix(resistance, f_matrix):
     f_matrix: ndarray
         F行列
     """
-    R1 = 50
+    # R1 = 50
+    R1 = 0
     R2 = resistance
 
     A = f_matrix[0][0]

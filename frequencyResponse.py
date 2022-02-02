@@ -200,15 +200,15 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                 )
                 ax.legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         text = (
-            "matching"
+            "インピーダンスマッチング条件における周波数特性"
             if condition["shouldMatching"]
-            else "open"
+            else "受電端開放条件における周波数特性"
             if condition["impedance"] >= 1e6
-            else "short"
+            else "受電端短絡条件における周波数特性"
         )
-        text = f"受電端側の抵抗値{'{:.2e}'.format(condition['impedance'])}[Ω]"
+        # text = f"受電端側の抵抗値{'{:.2e}'.format(condition['impedance'])}[Ω]"
         FONT_SIZE = 12
-        ax.set_title(f"{text}")
+        # ax.set_title(f"{text}")
         ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
         ax.set_xlabel("frequency [MHz]", fontsize=FONT_SIZE)
         # ax.set_yscale("log")  # y軸はlogスケールで表示する
@@ -240,9 +240,9 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 
 drawFrequencyResponse(
     # 無損失ケーブル用
-    # list(range(0, 5 * util.ONE_HUNDRED, 1000)),
-    # cable.cable_noLoss_vertual,
+    list(range(0, 5 * util.ONE_HUNDRED, 1000)),
+    cable.cable_noLoss_vertual,
     # 損失ありケーブル用
-    list(range(0, 100 * util.ONE_HUNDRED, 10000)),
-    cable.cable_vertual,
+    # list(range(0, 100 * util.ONE_HUNDRED, 10000)),
+    # cable.cable_vertual,
 )

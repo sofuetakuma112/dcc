@@ -36,3 +36,11 @@ for i in range(3):
     print(i)
 
 print(3.6e-3 / (math.e ** (np.sqrt(2.3) * 50 / 138)))
+
+print((1 / (5.5e6 * 4 * 6) ** 2) / 1.02e-10)
+
+float_str = "5.626676749671402e-07"
+number, power = float_str.split('e-')
+print(number[:4], power)
+
+print((1 / (5.5e6 * 4 * 6) ** 2) / 7.25e-11)

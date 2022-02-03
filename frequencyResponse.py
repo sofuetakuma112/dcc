@@ -128,7 +128,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             tfs.append(tf)
 
         ax.plot(
-            frequencies_Hz,
+            [freq / 1e6 for freq in frequencies_Hz],
             # np.abs(tfs),
             list(map(util.convertGain2dB, tfs)),
         )
@@ -136,7 +136,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             if i == 1:
                 # open
                 ax.scatter(
-                    resonance_freqs_open,
+                    [freq / 1e6 for freq in resonance_freqs_open],
                     list(
                         map(
                             util.convertGain2dB,
@@ -146,12 +146,12 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                             ),
                         )
                     ),
-                    # marker="v",
+                    marker="x",
                     color="blue",
                     # linestyle="",
                 )
                 ax.scatter(
-                    antiresonance_freqs_open,
+                    [freq / 1e6 for freq in antiresonance_freqs_open],
                     list(
                         map(
                             util.convertGain2dB,
@@ -169,7 +169,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             elif i == 2:
                 # short
                 ax.scatter(
-                    resonance_freqs_short,
+                    [freq / 1e6 for freq in resonance_freqs_short],
                     list(
                         map(
                             util.convertGain2dB,
@@ -179,12 +179,12 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                             ),
                         )
                     ),
-                    # marker="v",
+                    marker="x",
                     color="blue",
                     # linestyle="",
                 )
                 ax.scatter(
-                    antiresonance_freqs_short,
+                    [freq / 1e6 for freq in antiresonance_freqs_short],
                     list(
                         map(
                             util.convertGain2dB,
@@ -207,14 +207,17 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             else "受電端短絡条件における周波数特性"
         )
         # text = f"受電端側の抵抗値{'{:.2e}'.format(condition['impedance'])}[Ω]"
-        FONT_SIZE = 12
+        FONT_SIZE = 16
         # ax.set_title(f"{text}")
         ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
-        ax.set_xlabel("frequency [MHz]", fontsize=FONT_SIZE)
+        ax.tick_params(axis="y", labelsize=FONT_SIZE)
+        ax.set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
+        ax.tick_params(axis="x", labelsize=FONT_SIZE)
         # ax.set_yscale("log")  # y軸はlogスケールで表示する
-        ax.xaxis.set_major_formatter(
-            pltSettings.FixedOrderFormatter(6, useMathText=True)
-        )
+        # ax.xaxis.set_major_formatter(
+        #     pltSettings.FixedOrderFormatter(6, useMathText=True)
+        # )
+        ax.xaxis.get_offset_text().set_fontsize(FONT_SIZE)
         if cable.resistance == 0 and cable.conductance == 0:
             # 最大値と最小値の差がほぼない場合, y軸のスケールを変更する
             if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:

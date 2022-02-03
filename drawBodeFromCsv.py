@@ -34,13 +34,13 @@ FONT_SIZE = 12
 axes[0].plot(frequencies_Hz, amps)
 # axes[0].set_title("input(t)")
 axes[0].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)
-axes[0].set_xlabel("frequency[MHz]", fontsize=FONT_SIZE)
+axes[0].set_xlabel("Frequency[Hz]", fontsize=FONT_SIZE)
 axes[0].xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
 
 axes[1].plot(frequencies_Hz, phases)
 # axes[1].set_title("input(t)")
 axes[1].set_ylabel("phase[θ]", fontsize=FONT_SIZE)
-axes[1].set_xlabel("frequency[MHz]", fontsize=FONT_SIZE)
+axes[1].set_xlabel("Frequency[Hz]", fontsize=FONT_SIZE)
 axes[1].xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
 
 plt.tight_layout()

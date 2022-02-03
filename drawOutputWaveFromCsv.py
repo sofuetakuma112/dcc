@@ -7,25 +7,27 @@ import matplotlibSettings as pltSettings
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
 
-# df = pd.read_csv("csv/T3DSO2204A_CSV_C1_1.csv", skiprows=11)
+FONT_SIZE = 16
+axes = [plt.subplots()[1] for i in range(2)]
 df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
 seconds = list(df["Second"])
 values = list(df["Value"])
-
-fig, ax = plt.subplots()
-
-FONT_SIZE = 12
-# ax.plot(seconds, values)
-# ax.set_title("input(t)")
-ax.set_ylabel("Vout[V]", fontsize=FONT_SIZE)
-ax.set_xlabel("time[μs]", fontsize=FONT_SIZE)
-ax.set_xlim(-0.1e-6, 10e-6)
-ax.xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(-6, useMathText=True))
+axes[0].plot([s * 1e6 for s in seconds], values)
 
 df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
 seconds = list(df["Second"])
 values = list(df["Value"])
-ax.plot(seconds, values)
+axes[1].plot([s * 1e6 for s in seconds], values)
+
+for i in range(len(axes)):
+    axes[i].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
+    axes[i].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
+    axes[i].set_xlim(-0.1, 10)
+    axes[i].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
+    axes[i].tick_params(axis="y", labelsize=FONT_SIZE)
+    axes[i].tick_params(axis="x", labelsize=FONT_SIZE)
+    # ax.set_title("input(t)")
+    # ax.xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(-6, useMathText=True))
 
 plt.tight_layout()
 plt.show()

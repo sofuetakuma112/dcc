@@ -26,7 +26,6 @@ class Cable:
 # capacitance = 2e-10 # インピーダンスの周波数特性で合わせた
 # capacitance = 1e-10 # 伝達関数の周波数特性で合わせた(R1 = 0で考えた, G = 2.2e-3)
 capacitance, conductance = (7.25e-11, 1e-5) # 伝達関数の周波数特性で合わせた(実測データのVin = 0.5[V]として周波数特性を求めた)
-# capacitance, conductance = (1e-10, 1.38e-3) # 解放, 伝達関数の周波数特性で合わせた(実測データのVin = 1[V]として周波数特性を求めた)
 # capacitance, conductance = (1.61e-10, 1e-8) # 解放, 伝達関数の周波数特性で合わせた(実測データのVin = 1[V]として周波数特性を求めた)
 cable_vertual = Cable(
     resistance=1e-8,

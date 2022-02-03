@@ -90,13 +90,17 @@ fig, ax = plt.subplots()
 #     c="red",
 # )
 
+FONT_SIZE = 16
 ax.plot(
-    frequencies_Hz,
+    [freq / 1e6 for freq in frequencies_Hz],
     tfs,
 )
-ax.set_xlabel("frequency [MHz]")
-ax.xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
-ax.set_ylabel("Gain [dB]")
+ax.set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
+ax.tick_params(axis="x", labelsize=FONT_SIZE)
+ax.set_ylabel("Gain [dB]", fontsize=FONT_SIZE)
+ax.tick_params(axis="y", labelsize=FONT_SIZE)
+ax.xaxis.get_offset_text().set_fontsize(FONT_SIZE)
+# ax.xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
 
 plt.tight_layout()
 plt.show()

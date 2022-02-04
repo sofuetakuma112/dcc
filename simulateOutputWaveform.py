@@ -3,8 +3,6 @@ import matplotlib
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
 
-import matplotlibSettings as pltSettings
-
 import numpy as np
 import pandas as pd
 
@@ -19,20 +17,27 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     samplingFrequency = (
         input_wave_frequency * timeLength
     )  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
-    # np.arange(0, 10, 1) => [0 1 2 3 4 5 6 7 8 9]
+    # 0から10μsまで
     times = np.arange(
-        0, 1 / input_wave_frequency, 1 / samplingFrequency
+        -25e-6, 25e-6, 1 / samplingFrequency
     )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
-    if len(times) != timeLength:
+    print(f"len(times): {len(times)}")  # 1000000
+    if len(times) != timeLength * 5:
         times = times[:-1]
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
     # squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
 
     # 指定したDuty比になるようリストの数値を調整する
     dutyRate = 50  # [%]
-    squareWaves_time = [0] * (timeLength)
-    for i in range(int(timeLength * dutyRate / 100)):
-        squareWaves_time[i] = 1
+    squareWaves_time = [0] * (len(times))
+    riseLength = int(
+        len([time for time in times if 0 <= time and time <= 10e-6]) * dutyRate / 100
+    )
+    count = 0
+    for i in range(len(times)):
+        if 0 <= times[i] and times[i] <= 10e-6 and count < riseLength:
+            squareWaves_time[i] = 1
+            count += 1
     squareWaves_time[0] = 0  # 先頭の要素を0にしてパルス波の頭とケツを一致させる
     coef = 2
     squareWaves_time = [n * coef for n in squareWaves_time]
@@ -93,7 +98,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     # print(frequencies) # [0.000e+00 1.000e+05 2.000e+05 ... 9.998e+08 9.999e+08 1.000e+09]
 
     axes[1].plot(
-        [freq / 1e6 for freq in frequencies[:11]], np.abs(inputWaves_fft)[:11]
+        [freq / 1e6 for freq in frequencies[:51]], np.abs(inputWaves_fft)[:51]
     )  # absで振幅を取得
     # axes[1].set_title("abs(F[input(t)])")
     axes[1].set_ylabel("Amp", fontsize=FONT_SIZE)
@@ -113,8 +118,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     )
 
     axes[2].plot(
-        [freq / 1e6 for freq in frequencies[:11]],
-        list(map(lambda tf: util.convertGain2dB(tf), tfs))[:11],
+        [freq / 1e6 for freq in frequencies[:51]],
+        list(map(lambda tf: util.convertGain2dB(tf), tfs))[:51],
     )
     # axes[2].set_title("abs(H(f))")
     axes[2].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)
@@ -130,12 +135,13 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     convolution = np.array(inputWaves_fft) * np.array(
         tfs
     )  # 時間軸の畳み込み積分 = フーリエ変換した値同士の積(の値も周波数軸のもの)
-    # convolution = np.array(inputWaves_fft, dtype=np.complex) * np.array(
-    #     list(map(lambda tf: abs(tf), tfs)), dtype=np.complex
-    # )
 
     axes[3].plot(
-        [freq / 1e6 for freq in frequencies[:11]], np.abs(convolution)[:11], label="シミュレーション"
+        [freq / 1e6 for freq in frequencies[:51]],
+        np.abs(convolution)[:51],
+        label="シミュレーション",
+        linestyle="dashed" if showMeasuredValue else "solid",
+        zorder=2,
     )  # absで振幅を取得
     # axes[3].set_title("abs(F[input(t)] * H(f))")
     axes[3].set_ylabel("Amp", fontsize=FONT_SIZE)
@@ -159,7 +165,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
             axes[3].plot(
                 [freq / 1e6 for freq in frequencies[:51]],
                 np.abs(inputWaves_fft[:51]),
-                label="実測値"
+                label="実測値",
+                zorder=1,
             )  # absで振幅を取得
             axes[3].legend()
         elif endCondition["impedance"] == 1e6:
@@ -171,7 +178,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
             axes[3].plot(
                 [freq / 1e6 for freq in frequencies[:51]],
                 np.abs(inputWaves_fft[:51]),
-                label="実測値"
+                label="実測値",
+                zorder=1,
             )  # absで振幅を取得
             axes[3].legend()
     ### 実測値の周波数応答
@@ -184,7 +192,13 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 
     r = np.fft.irfft(convolution, len(times))
 
-    axes[4].plot([time * 1e6 for time in times], np.real(r), zorder=2, label="シミュレーション")
+    axes[4].plot(
+        [time * 1e6 for time in times],
+        np.real(r),
+        zorder=2,
+        label="シミュレーション",
+        linestyle="dashed" if showMeasuredValue else "solid",
+    )
     # axes[4].set_title("output(t).real")
     axes[4].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[4].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
@@ -203,10 +217,10 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
             seconds = list(df["Second"])
             values = list(df["Value"])
             axes[4].plot(
-                [s * 1e6 + 0.1 for s in seconds],
-                [value - 0.005 for value in values],
+                [s * 1e6 for s in seconds],
+                [value for value in values],
                 zorder=1,
-                label="実測値"
+                label="実測値",
             )
             axes[4].legend()
         elif endCondition["impedance"] == 1e6:
@@ -214,10 +228,10 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
             seconds = list(df["Second"])
             values = list(df["Value"])
             axes[4].plot(
-                [s * 1e6 + 0.1 for s in seconds],
-                [value - 0.01 for value in values],
+                [s * 1e6 for s in seconds],
+                [value for value in values],
                 zorder=1,
-                label="実測値"
+                label="実測値",
             )
             axes[4].legend()
     ### 実測値の時間応答
@@ -240,7 +254,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    {"shouldMatching": False, "impedance": 1e6},
-    # {"shouldMatching": False, "impedance": 50},
-    showMeasuredValue=True,
+    # {"shouldMatching": False, "impedance": 1e6},
+    {"shouldMatching": False, "impedance": 50},
+    showMeasuredValue=False,
 )

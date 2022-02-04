@@ -11,7 +11,6 @@ from tqdm import tqdm
 import util
 import cable
 import transferFunction as tfModules
-import matplotlibSettings as pltSettings
 
 
 def drawBodePlot(frequencies_Hz, endCondition, cable, fileName=""):
@@ -117,9 +116,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         {"shouldMatching": False, "impedance": 1e-6},
     ]
     for (i, condition) in enumerate(conditions):
-        # ケーブルが損失あり、かつマッチング条件のときスキップ
-        # if (cable.resistance != 0 or cable.conductance != 0) and i == 0:
-        #     continue
         fig, ax = plt.subplots()
 
         tfs = []
@@ -129,7 +125,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 
         ax.plot(
             [freq / 1e6 for freq in frequencies_Hz],
-            # np.abs(tfs),
             list(map(util.convertGain2dB, tfs)),
         )
         if cable.resistance == 0 and cable.conductance == 0:
@@ -140,7 +135,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     list(
                         map(
                             util.convertGain2dB,
-                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 resonance_freqs_open, condition, cable
                             ),
@@ -148,22 +142,18 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     ),
                     marker="x",
                     color="blue",
-                    # linestyle="",
                 )
                 ax.scatter(
                     [freq / 1e6 for freq in antiresonance_freqs_open],
                     list(
                         map(
                             util.convertGain2dB,
-                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 antiresonance_freqs_open, condition, cable
                             ),
                         )
                     ),
-                    # marker="o",
                     color="red",
-                    # linestyle="",
                 )
                 ax.legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
             elif i == 2:
@@ -173,7 +163,6 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     list(
                         map(
                             util.convertGain2dB,
-                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 resonance_freqs_short, condition, cable
                             ),
@@ -181,22 +170,18 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                     ),
                     marker="x",
                     color="blue",
-                    # linestyle="",
                 )
                 ax.scatter(
                     [freq / 1e6 for freq in antiresonance_freqs_short],
                     list(
                         map(
                             util.convertGain2dB,
-                            # abs,
                             tfModules.calcTfsBySomeFreqs(
                                 antiresonance_freqs_short, condition, cable
                             ),
                         )
                     ),
-                    # marker="o",
                     color="red",
-                    # linestyle="",
                 )
                 ax.legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
         text = (
@@ -206,17 +191,11 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             if condition["impedance"] >= 1e6
             else "受電端短絡条件における周波数特性"
         )
-        # text = f"受電端側の抵抗値{'{:.2e}'.format(condition['impedance'])}[Ω]"
         FONT_SIZE = 16
-        # ax.set_title(f"{text}")
         ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
         ax.tick_params(axis="y", labelsize=FONT_SIZE)
         ax.set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
         ax.tick_params(axis="x", labelsize=FONT_SIZE)
-        # ax.set_yscale("log")  # y軸はlogスケールで表示する
-        # ax.xaxis.set_major_formatter(
-        #     pltSettings.FixedOrderFormatter(6, useMathText=True)
-        # )
         ax.xaxis.get_offset_text().set_fontsize(FONT_SIZE)
         if cable.resistance == 0 and cable.conductance == 0:
             # 最大値と最小値の差がほぼない場合, y軸のスケールを変更する
@@ -243,9 +222,9 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
 
 drawFrequencyResponse(
     # 無損失ケーブル用
-    list(range(0, 5 * util.ONE_HUNDRED, 1000)),
-    cable.cable_noLoss_vertual,
+    # list(range(0, 5 * util.ONE_HUNDRED, 1000)),
+    # cable.cable_noLoss_vertual,
     # 損失ありケーブル用
-    # list(range(0, 100 * util.ONE_HUNDRED, 10000)),
-    # cable.cable_vertual,
+    list(range(0, 100 * util.ONE_HUNDRED, 10000)),
+    cable.cable_vertual,
 )

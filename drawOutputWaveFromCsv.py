@@ -1,8 +1,6 @@
 import pandas as pd
 import matplotlib
 
-import matplotlibSettings as pltSettings
-
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
@@ -22,12 +20,10 @@ axes[1].plot([s * 1e6 for s in seconds], values)
 for i in range(len(axes)):
     axes[i].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[i].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
-    axes[i].set_xlim(-0.1, 10)
+    # axes[i].set_xlim(-0.1, 10)
     axes[i].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
     axes[i].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[i].tick_params(axis="x", labelsize=FONT_SIZE)
-    # ax.set_title("input(t)")
-    # ax.xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(-6, useMathText=True))
 
 plt.tight_layout()
 plt.show()

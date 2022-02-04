@@ -2,8 +2,6 @@ import pandas as pd
 import matplotlib
 import numpy as np
 
-import matplotlibSettings as pltSettings
-
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
@@ -35,8 +33,6 @@ for i in range(len(axes)):
     axes[i].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[i].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[i].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
-    # axes[i].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
-    # axes[i].xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
 
 plt.tight_layout()
 plt.show()

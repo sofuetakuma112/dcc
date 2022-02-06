@@ -8,6 +8,8 @@ import matplotlib
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+import matplotlib.ticker as ticker
+
 
 import cable as cableModules
 import util
@@ -172,7 +174,7 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
             )
         )
         axes[i].plot(
-            frequencies_Hz,
+            [freq / 1e6 for freq in frequencies_Hz],
             # list(map(abs, tfs)),
             list(map(util.convertGain2dB, tfs)),
         )
@@ -241,19 +243,19 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
         #         linestyle="",
         #     )
         #     axes[i].legend(["全ての周波数", "共振周波数", "反共振周波数"], loc="best")
-        text = (
-            "インピーダンスマッチング条件における周波数特性"
-            if condition["shouldMatching"]
-            else "受電端開放条件における周波数特性"
-            if condition["impedance"] >= 1e6
-            else "受電端短絡条件における周波数特性"
-        )
+        # text = (
+        #     "インピーダンスマッチング条件における周波数特性"
+        #     if condition["shouldMatching"]
+        #     else "受電端開放条件における周波数特性"
+        #     if condition["impedance"] >= 1e6
+        #     else "受電端短絡条件における周波数特性"
+        # )
         FONT_SIZE = 12
-        axes[i].set_title(f"{text}")
-        axes[i].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
-        axes[i].set_xlabel("frequency [MHz]", fontsize=FONT_SIZE)
+        # axes[i].set_title(f"{text}")
+        axes[i].set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
+        axes[i].set_xlabel("Frequency [MHz]", fontsize=FONT_SIZE)
         axes[i].xaxis.set_major_formatter(
-            pltSettings.FixedOrderFormatter(6, useMathText=True)
+            pltSettings.FixedOrderFormatter(0, useMathText=True)
         )
         axes[i].ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
 

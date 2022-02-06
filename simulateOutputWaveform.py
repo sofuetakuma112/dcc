@@ -122,7 +122,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
         list(map(lambda tf: util.convertGain2dB(tf), tfs))[:51],
     )
     # axes[2].set_title("abs(H(f))")
-    axes[2].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)
+    axes[2].set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)
     # axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[2].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
     # axes[2].xaxis.set_major_formatter(
@@ -202,6 +202,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     # axes[4].set_title("output(t).real")
     axes[4].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[4].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
+    axes[4].set_xlim(-0.1, 1)
     # axes[4].xaxis.set_major_formatter(
     #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
     # )
@@ -254,7 +255,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    # {"shouldMatching": False, "impedance": 1e6},
-    {"shouldMatching": False, "impedance": 50},
+    {"shouldMatching": False, "impedance": 1e6},
+    # {"shouldMatching": False, "impedance": 50},
     showMeasuredValue=False,
 )

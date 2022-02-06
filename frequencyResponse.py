@@ -1,6 +1,7 @@
 import math
 
 import matplotlib
+import pandas as pd
 
 matplotlib.rc("font", family="Noto Sans CJK JP")
 import matplotlib.pyplot as plt
@@ -126,6 +127,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
         ax.plot(
             [freq / 1e6 for freq in frequencies_Hz],
             list(map(util.convertGain2dB, tfs)),
+            label="シミレーション",
         )
         if cable.resistance == 0 and cable.conductance == 0:
             if i == 1:
@@ -192,7 +194,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             else "受電端短絡条件における周波数特性"
         )
         FONT_SIZE = 16
-        ax.set_ylabel("Gain[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
+        ax.set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)  # y軸は、伝達関数の絶対値
         ax.tick_params(axis="y", labelsize=FONT_SIZE)
         ax.set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
         ax.tick_params(axis="x", labelsize=FONT_SIZE)
@@ -201,6 +203,27 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
             # 最大値と最小値の差がほぼない場合, y軸のスケールを変更する
             if max(np.abs(tfs)) - min(np.abs(tfs)) < 1e-6:
                 ax.set_ylim(-10, 10)
+
+        # 測定した伝達関数をグラフ表示
+        df = pd.read_csv("csv/data.csv")
+        frequencies2_Hz = list(df["frequency[Hz]"])[21:]
+        output_volts = list(df["volt_output[V]"])[21:]
+        volts_input = [0.5] * len(frequencies2_Hz)
+        tfs2 = list(
+            map(
+                lambda volt_input, volt_output: util.convertGain2dB(
+                    abs(volt_output / volt_input)
+                ),
+                volts_input,
+                output_volts,
+            )
+        )
+        ax.plot(
+            [freq / 1e6 for freq in frequencies2_Hz],
+            tfs2,
+            label="実測値",
+        )
+        ax.legend()
 
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))

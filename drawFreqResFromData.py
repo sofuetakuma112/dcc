@@ -83,7 +83,7 @@ ax.arrow(
 plt.text(3.5, 4.7, '$f_{between}$', fontsize=FONT_SIZE)
 ax.set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
 ax.tick_params(axis="x", labelsize=FONT_SIZE)
-ax.set_ylabel("Gain [dB]", fontsize=FONT_SIZE)
+ax.set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)
 ax.tick_params(axis="y", labelsize=FONT_SIZE)
 ax.xaxis.get_offset_text().set_fontsize(FONT_SIZE)
 

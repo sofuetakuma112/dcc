@@ -123,3 +123,11 @@ def calcTfsBySomeFreqs(frequencies_Hz, endCondition, cable):
         tf = createTransferFunction(frequency_Hz, endCondition, cable)
         tfs.append(tf)
     return tfs
+
+
+def calcImpedanceAsSeenFromTransmissionEnd(frequency_Hz, cable, endCondition):
+    Z0 = cable.calcCharacteristicImpedance(frequency_Hz)
+    Zr = endCondition["impedance"]
+    tanh = np.tanh(calculateTheta(frequency_Hz, cable))
+
+    return Z0 * (Zr + Z0 * tanh) / (Z0 + Zr * tanh)

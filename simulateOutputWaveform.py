@@ -20,7 +20,10 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     # 0から10μsまで
     times = np.arange(
         -25e-6, 25e-6, 1 / samplingFrequency
-    )  # 1 / samplingFrequency はサンプリング周期（何秒おきにサンプリングするか）
+    )
+    # times = np.arange(
+    #     -100e-6, 100e-6, 1 / samplingFrequency
+    # )
     print(f"len(times): {len(times)}")  # 1000000
     if len(times) != timeLength * 5:
         times = times[:-1]
@@ -28,7 +31,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     # squareWaves_time = np.sign(np.sin(2 * np.pi * input_wave_frequency * times))
 
     # 指定したDuty比になるようリストの数値を調整する
-    dutyRate = 50  # [%]
+    dutyRate = 2  # [%]
     squareWaves_time = [0] * (len(times))
     riseLength = int(
         len([time for time in times if 0 <= time and time <= 10e-6]) * dutyRate / 100
@@ -44,7 +47,9 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 
     ratio = len(
         list(filter(lambda y: True if y == 1 * coef else False, squareWaves_time))
-    ) / len(squareWaves_time)
+    ) / len(
+        [time for time in times if 0 <= time and time <= 10e-6]
+    )  # len(squareWaves_time)
     # デューティー比は、パルス幅を周期で割り算したもの
     print(f"デューティー比: {ratio * 100}%")
 
@@ -60,11 +65,15 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 
     FONT_SIZE = 16
 
+    xfirst = -0.1
+    xlast = 0.5
+
     inputWaves_time = squareWaves_time
     axes[0].plot([time * 1e6 for time in times], inputWaves_time)
     # axes[0].set_title("入力波形")
     axes[0].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[0].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
+    axes[0].set_xlim(xfirst, xlast)
     # axes[0].xaxis.set_major_formatter(
     #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
     # )
@@ -202,7 +211,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     # axes[4].set_title("output(t).real")
     axes[4].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[4].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
-    axes[4].set_xlim(-0.1, 1)
+    axes[4].set_xlim(xfirst, xlast)
     # axes[4].xaxis.set_major_formatter(
     #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
     # )
@@ -237,13 +246,20 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
             axes[4].legend()
     ### 実測値の時間応答
 
-    axes[5].plot([time * 1e6 for time in times], np.imag(r))
-    # axes[5].set_title("output(t).imag")
+    tfs_sg = [] # 受電端抵抗を分布定数線路の送電端から見たインピーダンスとし、SGをF行列とした時の伝達関数
+    for frequency_Hz in frequencies:
+        # 送電端から見たインピーダンスを計算する
+        Z11 = tfModules.calcImpedanceAsSeenFromTransmissionEnd(
+            frequency_Hz, cable, endCondition
+        )
+        tfs_sg.append(Z11 / (50 + Z11))
+    convolution_inputwave = np.array(inputWaves_fft) * np.array(tfs_sg)
+    r2 = np.fft.irfft(convolution_inputwave, len(times))
+
+    axes[5].plot([time * 1e6 for time in times], np.real(r2))
     axes[5].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[5].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
-    # axes[5].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
-    # )
+    axes[5].set_xlim(xfirst, xlast)
     axes[5].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[5].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[5].xaxis.get_offset_text().set_fontsize(FONT_SIZE)

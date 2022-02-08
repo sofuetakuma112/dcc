@@ -32,7 +32,7 @@ frequencies_Hz = list(range(500 * 1000, 100 * util.ONE_HUNDRED, 100000))
 # スケールバーが動いたらその値を読み取りグラフを更新する
 def graph(*args):
     axes[0].cla()
-    # axes[1].cla()
+    axes[1].cla()
     R = scale_var.get()
     L = scale_var_L.get()
     G = scale_var_G.get()
@@ -53,7 +53,7 @@ def graph(*args):
 
     resistance = R * 10 ** (-1 * R_nthOf10_negative)
     capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-    inductance = (1 / (5500000 * 24) ** 2) / capacitance
+    inductance = (1 / (2 * 6 * 15933717.375) ** 2) / capacitance
     # inductance = L * 10 ** (-1 * L_nthOf10_negative)
     conductance = G * 10 ** (-1 * G_nthOf10_negative)
 
@@ -284,6 +284,20 @@ def drawFrequencyResponseOfTf(R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]):
     # )
     # axes[1].legend()
 
+    axes[1].plot(
+        [frequency_Hz / 1e6 for frequency_Hz in frequencies_Hz],
+        np.abs(
+            [
+                cable.calcCharacteristicImpedance(frequency_Hz)
+                for frequency_Hz in frequencies_Hz
+            ]
+        ),
+    )
+    # axes[1].yaxis.set_major_formatter(
+    #     pltSettings.FixedOrderFormatter(0, useMathText=True)
+    # )
+    plt.gca().get_yaxis().get_major_formatter().set_useOffset(False)
+
 
 def calcEndVoltByAnyFreqUnderEndOpenCondition(
     R=0, L=0, G=0, C=0, axes=plt.subplots(2, 1)[1]
@@ -363,7 +377,8 @@ C_nthOf10_negative = 10
 resistance = R * 10 ** (-1 * R_nthOf10_negative)
 conductance = G * 10 ** (-1 * G_nthOf10_negative)
 capacitance = C * 10 ** (-1 * C_nthOf10_negative)
-inductance = (1 / (5500000 * 24) ** 2) / capacitance
+inductance = (1 / (2 * 6 * 15933717.375) ** 2) / capacitance
+# inductance = (1 / (5500000 * 24) ** 2) / capacitance
 # inductance = L * 10 ** (-1 * L_nthOf10_negative)
 
 number, power = str(inductance).split("e-")
@@ -371,9 +386,9 @@ L = float(number[:4])
 L_nthOf10_negative = int(power)
 
 fig = plt.Figure()
-# fig, axes = plt.subplots(2, 1, figsize=(8, 8))
-fig, ax = plt.subplots()
-axes = [ax]
+fig, axes = plt.subplots(2, 1, figsize=(8, 8))
+# fig, ax = plt.subplots()
+# axes = [ax]
 
 # drawFrequencyResponseOfAlphaAndCharaImpedance(
 #     resistance, inductance, conductance, capacitance, axes

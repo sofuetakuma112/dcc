@@ -69,7 +69,7 @@ def drawBodePlot(frequencies_Hz, endCondition, cable, fileName=""):
     plt.show()
 
 
-def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
+def drawFrequencyResponse(frequencies_Hz, cable, showMeasuredValue=False, fileName=""):
     """
     分布定数線路の周波数特性をグラフに表示する
 
@@ -205,25 +205,26 @@ def drawFrequencyResponse(frequencies_Hz, cable, fileName=""):
                 ax.set_ylim(-10, 10)
 
         # 測定した伝達関数をグラフ表示
-        df = pd.read_csv("csv/data.csv")
-        frequencies2_Hz = list(df["frequency[Hz]"])[21:]
-        output_volts = list(df["volt_output[V]"])[21:]
-        volts_input = [0.5] * len(frequencies2_Hz)
-        tfs2 = list(
-            map(
-                lambda volt_input, volt_output: util.convertGain2dB(
-                    abs(volt_output / volt_input)
-                ),
-                volts_input,
-                output_volts,
+        if showMeasuredValue:
+            df = pd.read_csv("csv/data.csv")
+            frequencies2_Hz = list(df["frequency[Hz]"])[21:]
+            output_volts = list(df["volt_output[V]"])[21:]
+            volts_input = [0.5] * len(frequencies2_Hz)
+            tfs2 = list(
+                map(
+                    lambda volt_input, volt_output: util.convertGain2dB(
+                        abs(volt_output / volt_input)
+                    ),
+                    volts_input,
+                    output_volts,
+                )
             )
-        )
-        ax.plot(
-            [freq / 1e6 for freq in frequencies2_Hz],
-            tfs2,
-            label="実測値",
-        )
-        ax.legend()
+            ax.plot(
+                [freq / 1e6 for freq in frequencies2_Hz],
+                tfs2,
+                label="実測値",
+            )
+            ax.legend()
 
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))
@@ -250,4 +251,5 @@ drawFrequencyResponse(
     # 損失ありケーブル用
     list(range(0, 100 * util.ONE_HUNDRED, 10000)),
     cable.cable_vertual,
+    showMeasuredValue=False,
 )

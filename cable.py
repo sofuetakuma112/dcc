@@ -23,11 +23,13 @@ class Cable:
 
 # 損失有りのケーブル
 # RG58A/U
-capacitance, conductance = (7.25e-11, 1e-5) # 伝達関数の周波数特性で合わせた(実測データのVin = 0.5[V]として周波数特性を求めた)
+# capacitance, conductance = (7.25e-11, 1e-5) # 伝達関数の周波数特性で合わせた(実測データのVin = 0.5[V]として周波数特性を求めた)
+# capacitance, conductance = (1.53e-10, 1e-8)  # 特性インピーダンスの周波数特性で合わせた
 # capacitance, conductance = (1.61e-10, 1e-8) # 解放, 伝達関数の周波数特性で合わせた(実測データのVin = 1[V]として周波数特性を求めた)
+capacitance, conductance = (1.02e-10, 1e-8)
 cable_vertual = Cable(
     resistance=1e-8,
-    inductance=(1 / (5.5e6 * 4 * 6) ** 2)
+    inductance=(1 / (2 * 6 * 15933717.375) ** 2)
     / capacitance,  # LC / CでLを求めている(LCは[1/(4 * l * np.sqrt(LC))]から求めた)
     conductance=conductance,
     capacitance=capacitance,

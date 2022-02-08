@@ -8,7 +8,7 @@ import numpy as np
 import util
 import cable as cableModules
 
-frequencies_Hz = range(0, util.ONE_HUNDRED * 100, 1000)
+frequencies_Hz = range(0, 100 * util.ONE_HUNDRED, 10000)
 
 characteristicImpedances = []
 for frequency_Hz in list(frequencies_Hz):

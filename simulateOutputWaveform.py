@@ -61,13 +61,9 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 
     inputWaves_time = squareWaves_time
     axes[0].plot([time * 1e6 for time in times], inputWaves_time)
-    # axes[0].set_title("入力波形")
     axes[0].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[0].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
     axes[0].set_xlim(xfirst, xlast)
-    # axes[0].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
-    # )
     axes[0].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[0].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[0].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
@@ -100,13 +96,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     axes[1].plot(
         [freq / 1e6 for freq in frequencies[:51]], np.abs(inputWaves_fft)[:51]
     )  # absで振幅を取得
-    # axes[1].set_title("abs(F[input(t)])")
     axes[1].set_ylabel("Amp", fontsize=FONT_SIZE)
-    # axes[1].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[1].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
-    # axes[1].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(6, useMathText=True)
-    # )
     axes[1].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[1].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[1].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
@@ -121,13 +112,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
         [freq / 1e6 for freq in frequencies[:51]],
         list(map(lambda tf: util.convertGain2dB(tf), tfs))[:51],
     )
-    # axes[2].set_title("abs(H(f))")
     axes[2].set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)
-    # axes[2].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[2].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
-    # axes[2].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(6, useMathText=True)
-    # )
     axes[2].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[2].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[2].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
@@ -152,8 +138,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     ### 実測値の周波数応答
     if showMeasuredValue:
         if endCondition["impedance"] == 50:
-            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
-            df = pd.read_csv("csv/c1_200ns_50ohm.csv", skiprows=11)
+            # df = pd.read_csv("csv/c1_200ns_50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c1_200ns_50ohm_c2_1Mohm.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
             outputWaves_50ohm_fft = np.fft.rfft(values)
@@ -161,14 +147,13 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 len(values), seconds[2] - seconds[1]
             )
             axes[3].plot(
-                [freq / 1e6 for freq in frequencies_out_50ohm[:51]],
-                np.abs(outputWaves_50ohm_fft[:51]),
+                [freq / 1e6 for freq in frequencies_out_50ohm[:101]],
+                np.abs(outputWaves_50ohm_fft[:101]),
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
             axes[3].legend()
         elif endCondition["impedance"] == 1e6:
-            # df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
             df = pd.read_csv("csv/c1_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
@@ -208,8 +193,8 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     ### 実測値の周波数応答
     if showMeasuredValue:
         if endCondition["impedance"] == 50:
-            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
-            df = pd.read_csv("csv/c2_200ns_50ohm.csv", skiprows=11)
+            # df = pd.read_csv("csv/c2_200ns_50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c2_200ns_50ohm_c2_1Mohm.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
             inputWaves_50ohm_fft = np.fft.rfft(values)
@@ -217,14 +202,13 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 len(values), seconds[2] - seconds[1]
             )
             axes[4].plot(
-                [freq / 1e6 for freq in frequencies_input_50ohm[:51]],
-                np.abs(inputWaves_50ohm_fft[:51]),
+                [freq / 1e6 for freq in frequencies_input_50ohm[:101]],
+                np.abs(inputWaves_50ohm_fft[:101]),
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
             axes[4].legend()
         elif endCondition["impedance"] == 1e6:
-            # df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
             df = pd.read_csv("csv/c2_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
@@ -256,13 +240,9 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
         label="シミュレーション",
         linestyle="dashed" if showMeasuredValue else "solid",
     )
-    # axes[5].set_title("output(t).real")
     axes[5].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[5].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
     axes[5].set_xlim(xfirst, xlast)
-    # axes[5].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
-    # )
     axes[5].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[5].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[5].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
@@ -270,12 +250,12 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     ### 実測値の時間応答
     if showMeasuredValue:
         if endCondition["impedance"] == 50:
-            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
-            df = pd.read_csv("csv/c1_200ns_50ohm.csv", skiprows=11)
+            # df = pd.read_csv("csv/c1_200ns_50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c1_200ns_50ohm_c2_1Mohm.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
             axes[5].plot(
-                [s * 1e6 for s in seconds],
+                [s * 1e6 + 0.03 for s in seconds],
                 values,
                 zorder=1,
                 label="実測値",
@@ -312,12 +292,12 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     ### 実測値の時間応答
     if showMeasuredValue:
         if endCondition["impedance"] == 50:
-            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
-            df = pd.read_csv("csv/c2_200ns_50ohm.csv", skiprows=11)
+            # df = pd.read_csv("csv/c2_200ns_50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c2_200ns_50ohm_c2_1Mohm.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
             axes[6].plot(
-                [s * 1e6 for s in seconds],
+                [s * 1e6 + 0.03 for s in seconds],
                 values,
                 zorder=1,
                 label="実測値",

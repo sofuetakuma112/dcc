@@ -119,10 +119,10 @@ def drawFrequencyResponse(frequencies_Hz, cable, showMeasuredValue=False, fileNa
     for (i, condition) in enumerate(conditions):
         fig, ax = plt.subplots()
 
-        tfs = []
-        for frequency_Hz in tqdm(frequencies_Hz, leave=False):
-            tf = tfModules.createTransferFunction(frequency_Hz, condition, cable)
-            tfs.append(tf)
+        tfs = [
+            tfModules.createTransferFunction(frequency_Hz, condition, cable)
+            for frequency_Hz in tqdm(frequencies_Hz, leave=False)
+        ]
 
         ax.plot(
             [freq / 1e6 for freq in frequencies_Hz],
@@ -206,24 +206,10 @@ def drawFrequencyResponse(frequencies_Hz, cable, showMeasuredValue=False, fileNa
 
         # 測定した伝達関数をグラフ表示
         if showMeasuredValue:
-            df = pd.read_csv("csv/data.csv")
-            frequencies2_Hz = list(df["frequency[Hz]"])[21:]
-            output_volts = list(df["volt_output[V]"])[21:]
-            volts_input = [0.5] * len(frequencies2_Hz)
-            tfs2 = list(
-                map(
-                    lambda volt_input, volt_output: util.convertGain2dB(
-                        abs(volt_output / volt_input)
-                    ),
-                    volts_input,
-                    output_volts,
-                )
-            )
-            ax.plot(
-                [freq / 1e6 for freq in frequencies2_Hz],
-                tfs2,
-                label="実測値",
-            )
+            df = pd.read_csv("csv/bode_rg58au.csv", skiprows=27)
+            frequencies_Hz = list(df["Frequency(Hz)"])
+            amps = list(df["CH1 Amplitude(dB)"])
+            ax.plot([frequency_Hz / 1e6 for frequency_Hz in frequencies_Hz], amps, label="実測値")
             ax.legend()
 
     if fileName != "":
@@ -249,7 +235,7 @@ drawFrequencyResponse(
     # list(range(0, 5 * util.ONE_HUNDRED, 1000)),
     # cable.cable_noLoss_vertual,
     # 損失ありケーブル用
-    list(range(0, 100 * util.ONE_HUNDRED, 10000)),
+    list(range(0, 50 * util.ONE_HUNDRED, 10000)),
     cable.cable_vertual,
-    showMeasuredValue=False,
+    showMeasuredValue=True,
 )

@@ -44,3 +44,5 @@ number, power = float_str.split('e-')
 print(number[:4], power)
 
 print((1 / (5.5e6 * 4 * 6) ** 2) / 7.25e-11)
+
+print((1 / (2 * 6 * 15933717.375) ** 2) / 1.02e-10)

@@ -54,8 +54,8 @@ axes = [plt.subplots()[1]]
 
 FONT_SIZE = 12
 axes[0].plot([frequency_Hz / 1e6 for frequency_Hz in frequencies_Hz], amps)
-axes[0].set_ylabel("Gain[dB]", fontsize=FONT_SIZE)
-axes[0].set_xlabel("Frequency[Hz]", fontsize=FONT_SIZE)
+axes[0].set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)
+axes[0].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
 # axes[0].xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
 
 # axes[1].plot(frequencies_Hz, phases)

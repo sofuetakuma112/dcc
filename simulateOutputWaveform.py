@@ -13,18 +13,15 @@ import util
 
 def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     input_wave_frequency = 100e3  # 100[kHz]
-    timeLength = 20000
+    timeLength = 10000
     samplingFrequency = (
         input_wave_frequency * timeLength
     )  # サンプリング周波数（1秒間に何回サンプリングするか、ナイキスト周波数は44100 / 2）
     # 0から10μsまで
-    times = np.arange(
-        -25e-6, 25e-6, 1 / samplingFrequency
-    )
+    times = np.arange(-25e-6, 25e-6, 1 / samplingFrequency)
     # times = np.arange(
     #     -100e-6, 100e-6, 1 / samplingFrequency
     # )
-    print(f"len(times): {len(times)}")  # 1000000
     if len(times) != timeLength * 5:
         times = times[:-1]
     # 足し合わされる波は、入力波の周波数の整数倍の周波数を持つ
@@ -55,13 +52,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 
     # fig, axes = plt.subplots(3, 2)
     # axes = axes.flatten()
-    fig, axes = plt.subplots()
-    fig, axes1 = plt.subplots()
-    fig, axes2 = plt.subplots()
-    fig, axes3 = plt.subplots()
-    fig, axes4 = plt.subplots()
-    fig, axes5 = plt.subplots()
-    axes = [axes, axes1, axes2, axes3, axes4, axes5]
+    axes = [plt.subplots()[1] for i in range(7)]
 
     FONT_SIZE = 16
 
@@ -103,7 +94,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     # # サンプリング周期次第で時系列データの時間軸の長さが決定する（100点, 0.01）なら100 * 0.01[s]の時系列データということになる？
     # input_wave_frequencyの整数倍の周波数のリストになる
     # DFTは長さnのリストを, 長さnの複素数リストに変換する
-    frequencies = np.fft.rfftfreq(len(inputWaves_time), 1.0 / samplingFrequency)
+    frequencies = np.fft.rfftfreq(len(inputWaves_time), 1 / samplingFrequency)
     # print(frequencies) # [0.000e+00 1.000e+05 2.000e+05 ... 9.998e+08 9.999e+08 1.000e+09]
 
     axes[1].plot(
@@ -141,24 +132,19 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     axes[2].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[2].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
 
-    convolution = np.array(inputWaves_fft) * np.array(
+    convolution_out = np.array(inputWaves_fft) * np.array(
         tfs
     )  # 時間軸の畳み込み積分 = フーリエ変換した値同士の積(の値も周波数軸のもの)
 
     axes[3].plot(
-        [freq / 1e6 for freq in frequencies[:51]],
-        np.abs(convolution)[:51],
+        [freq / 1e6 for freq in frequencies[:2501]],
+        np.abs(convolution_out)[:2501],
         label="シミュレーション",
         linestyle="dashed" if showMeasuredValue else "solid",
         zorder=2,
     )  # absで振幅を取得
-    # axes[3].set_title("abs(F[input(t)] * H(f))")
     axes[3].set_ylabel("Amp", fontsize=FONT_SIZE)
-    # axes[3].set_xlabel("Frequency [Hz]", fontsize=FONT_SIZE)
     axes[3].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
-    # axes[3].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(6, useMathText=True)
-    # )
     axes[3].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[3].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[3].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
@@ -166,103 +152,189 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
     ### 実測値の周波数応答
     if showMeasuredValue:
         if endCondition["impedance"] == 50:
-            df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
+            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c1_200ns_50ohm.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
-            inputWaves_fft = np.fft.rfft(values)
-            frequencies = np.fft.rfftfreq(len(values), seconds[1] - seconds[0])
+            outputWaves_50ohm_fft = np.fft.rfft(values)
+            frequencies_out_50ohm = np.fft.rfftfreq(
+                len(values), seconds[2] - seconds[1]
+            )
             axes[3].plot(
-                [freq / 1e6 for freq in frequencies[:51]],
-                np.abs(inputWaves_fft[:51]),
+                [freq / 1e6 for freq in frequencies_out_50ohm[:51]],
+                np.abs(outputWaves_50ohm_fft[:51]),
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
             axes[3].legend()
         elif endCondition["impedance"] == 1e6:
-            df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
+            # df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
+            df = pd.read_csv("csv/c1_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
             values = list(df["Value"])
-            inputWaves_fft = np.fft.rfft(values)
-            frequencies = np.fft.rfftfreq(len(values), seconds[1] - seconds[0])
+            outputWaves_open_fft = np.fft.rfft(values)
+            frequencies_out_open = np.fft.rfftfreq(len(values), seconds[2] - seconds[1])
             axes[3].plot(
-                [freq / 1e6 for freq in frequencies[:51]],
-                np.abs(inputWaves_fft[:51]),
+                [freq / 1e6 for freq in frequencies_out_open[:51]],
+                np.abs(outputWaves_open_fft[:51]),
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
             axes[3].legend()
     ### 実測値の周波数応答
 
-    # 逆フーリエ変換
-    # r = np.fft.ifft(convolution, len(T))
-    # 入力波形が実数データ向けの逆FFT np.fft.irfft が用意されている。
-    # 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
-    # 入力波形が実数値のみなので、出力波形も虚数部分は捨ててよい？
-
-    r = np.fft.irfft(convolution, len(times))
-
-    axes[4].plot(
-        [time * 1e6 for time in times],
-        np.real(r),
-        zorder=2,
-        label="シミュレーション",
-        linestyle="dashed" if showMeasuredValue else "solid",
-    )
-    # axes[4].set_title("output(t).real")
-    axes[4].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
-    axes[4].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
-    axes[4].set_xlim(xfirst, xlast)
-    # axes[4].xaxis.set_major_formatter(
-    #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
-    # )
-    axes[4].tick_params(axis="y", labelsize=FONT_SIZE)
-    axes[4].tick_params(axis="x", labelsize=FONT_SIZE)
-    axes[4].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
-
-    ### 実測値の時間応答
-    if showMeasuredValue:
-        axes[4].set_xlim(-0.1, 10)
-        if endCondition["impedance"] == 50:
-            df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
-            seconds = list(df["Second"])
-            values = list(df["Value"])
-            axes[4].plot(
-                [s * 1e6 for s in seconds],
-                [value for value in values],
-                zorder=1,
-                label="実測値",
-            )
-            axes[4].legend()
-        elif endCondition["impedance"] == 1e6:
-            df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
-            seconds = list(df["Second"])
-            values = list(df["Value"])
-            axes[4].plot(
-                [s * 1e6 for s in seconds],
-                [value for value in values],
-                zorder=1,
-                label="実測値",
-            )
-            axes[4].legend()
-    ### 実測値の時間応答
-
-    tfs_sg = [] # 受電端抵抗を分布定数線路の送電端から見たインピーダンスとし、SGをF行列とした時の伝達関数
+    tfs_sg = []  # 受電端抵抗を分布定数線路の送電端から見たインピーダンスとし、SGをF行列とした時の伝達関数
     for frequency_Hz in frequencies:
         # 送電端から見たインピーダンスを計算する
         Z11 = tfModules.calcImpedanceAsSeenFromTransmissionEnd(
             frequency_Hz, cable, endCondition
         )
         tfs_sg.append(Z11 / (50 + Z11))
-    convolution_inputwave = np.array(inputWaves_fft) * np.array(tfs_sg)
-    r2 = np.fft.irfft(convolution_inputwave, len(times))
+    convolution_input = np.array(inputWaves_fft) * np.array(tfs_sg)
 
-    axes[5].plot([time * 1e6 for time in times], np.real(r2))
+    axes[4].plot(
+        [freq / 1e6 for freq in frequencies[:2501]],
+        np.abs(convolution_input)[:2501],
+        label="シミュレーション",
+        linestyle="dashed" if showMeasuredValue else "solid",
+        zorder=2,
+    )  # absで振幅を取得
+    axes[4].set_ylabel("Amp", fontsize=FONT_SIZE)
+    axes[4].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
+    axes[4].tick_params(axis="y", labelsize=FONT_SIZE)
+    axes[4].tick_params(axis="x", labelsize=FONT_SIZE)
+    axes[4].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
+
+    ### 実測値の周波数応答
+    if showMeasuredValue:
+        if endCondition["impedance"] == 50:
+            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c2_200ns_50ohm.csv", skiprows=11)
+            seconds = list(df["Second"])
+            values = list(df["Value"])
+            inputWaves_50ohm_fft = np.fft.rfft(values)
+            frequencies_input_50ohm = np.fft.rfftfreq(
+                len(values), seconds[2] - seconds[1]
+            )
+            axes[4].plot(
+                [freq / 1e6 for freq in frequencies_input_50ohm[:51]],
+                np.abs(inputWaves_50ohm_fft[:51]),
+                label="実測値",
+                zorder=1,
+            )  # absで振幅を取得
+            axes[4].legend()
+        elif endCondition["impedance"] == 1e6:
+            # df = pd.read_csv("csv/singlePlus_endOpen.csv", skiprows=11)
+            df = pd.read_csv("csv/c2_200ns_open.csv", skiprows=11)
+            seconds = list(df["Second"])
+            values = list(df["Value"])
+            inputWaves_open_fft = np.fft.rfft(values)
+            frequencies_input_open = np.fft.rfftfreq(
+                len(values), seconds[2] - seconds[1]
+            )
+            axes[4].plot(
+                [freq / 1e6 for freq in frequencies_input_open[:51]],
+                np.abs(inputWaves_open_fft[:51]),
+                label="実測値",
+                zorder=1,
+            )  # absで振幅を取得
+            axes[4].legend()
+    ### 実測値の周波数応答
+
+    # 逆フーリエ変換
+    # r = np.fft.ifft(convolution_out, len(T))
+    # 入力波形が実数データ向けの逆FFT np.fft.irfft が用意されている。
+    # 33点のrfft結果を入力すれば64点の時間領域信号が得られる。
+    # 入力波形が実数値のみなので、出力波形も虚数部分は捨ててよい？
+
+    r = np.fft.irfft(convolution_out, len(times))
+
+    axes[5].plot(
+        [time * 1e6 for time in times],
+        np.real(r),
+        zorder=2,
+        label="シミュレーション",
+        linestyle="dashed" if showMeasuredValue else "solid",
+    )
+    # axes[5].set_title("output(t).real")
     axes[5].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
     axes[5].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
     axes[5].set_xlim(xfirst, xlast)
+    # axes[5].xaxis.set_major_formatter(
+    #     pltSettings.FixedOrderFormatter(-6, useMathText=True)
+    # )
     axes[5].tick_params(axis="y", labelsize=FONT_SIZE)
     axes[5].tick_params(axis="x", labelsize=FONT_SIZE)
     axes[5].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
+
+    ### 実測値の時間応答
+    if showMeasuredValue:
+        if endCondition["impedance"] == 50:
+            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c1_200ns_50ohm.csv", skiprows=11)
+            seconds = list(df["Second"])
+            values = list(df["Value"])
+            axes[5].plot(
+                [s * 1e6 for s in seconds],
+                values,
+                zorder=1,
+                label="実測値",
+            )
+            axes[5].legend()
+        elif endCondition["impedance"] == 1e6:
+            df = pd.read_csv("csv/c1_200ns_open.csv", skiprows=11)
+            seconds = list(df["Second"])
+            values = list(df["Value"])
+            axes[5].plot(
+                [s * 1e6 for s in seconds],
+                values,
+                zorder=1,
+                label="実測値",
+            )
+            axes[5].legend()
+    ### 実測値の時間応答
+
+    r2 = np.fft.irfft(convolution_input, len(times))
+
+    axes[6].plot(
+        [time * 1e6 for time in times],
+        np.real(r2),
+        label="シミュレーション",
+        linestyle="dashed" if showMeasuredValue else "solid",
+    )
+    axes[6].set_ylabel("Amp[V]", fontsize=FONT_SIZE)
+    axes[6].set_xlabel("Time[μs]", fontsize=FONT_SIZE)
+    axes[6].set_xlim(xfirst, xlast)
+    axes[6].tick_params(axis="y", labelsize=FONT_SIZE)
+    axes[6].tick_params(axis="x", labelsize=FONT_SIZE)
+    axes[6].xaxis.get_offset_text().set_fontsize(FONT_SIZE)
+
+    ### 実測値の時間応答
+    if showMeasuredValue:
+        if endCondition["impedance"] == 50:
+            # df = pd.read_csv("csv/singlePlus_end50ohm.csv", skiprows=11)
+            df = pd.read_csv("csv/c2_200ns_50ohm.csv", skiprows=11)
+            seconds = list(df["Second"])
+            values = list(df["Value"])
+            axes[6].plot(
+                [s * 1e6 for s in seconds],
+                values,
+                zorder=1,
+                label="実測値",
+            )
+            axes[6].legend()
+        elif endCondition["impedance"] == 1e6:
+            df = pd.read_csv("csv/c2_200ns_open.csv", skiprows=11)
+            seconds = list(df["Second"])
+            values = list(df["Value"])
+            axes[6].plot(
+                [s * 1e6 for s in seconds],
+                values,
+                zorder=1,
+                label="実測値",
+            )
+            axes[6].legend()
+    ### 実測値の時間応答
 
     plt.tight_layout()
     plt.show()
@@ -271,7 +343,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    {"shouldMatching": False, "impedance": 1e6},
-    # {"shouldMatching": False, "impedance": 50},
-    showMeasuredValue=False,
+    # {"shouldMatching": False, "impedance": 1e6},
+    {"shouldMatching": False, "impedance": 50},
+    showMeasuredValue=True,
 )

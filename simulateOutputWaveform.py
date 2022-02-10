@@ -152,7 +152,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
-            axes[3].legend()
+            axes[3].legend(fontsize=FONT_SIZE - 2)
         elif endCondition["impedance"] == 1e6:
             df = pd.read_csv("csv/c1_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
@@ -165,7 +165,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
-            axes[3].legend()
+            axes[3].legend(fontsize=FONT_SIZE - 2)
     ### 実測値の周波数応答
 
     tfs_sg = []  # 受電端抵抗を分布定数線路の送電端から見たインピーダンスとし、SGをF行列とした時の伝達関数
@@ -207,7 +207,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
-            axes[4].legend()
+            axes[4].legend(fontsize=FONT_SIZE - 2)
         elif endCondition["impedance"] == 1e6:
             df = pd.read_csv("csv/c2_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
@@ -222,7 +222,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 label="実測値",
                 zorder=1,
             )  # absで振幅を取得
-            axes[4].legend()
+            axes[4].legend(fontsize=FONT_SIZE - 2)
     ### 実測値の周波数応答
 
     # 逆フーリエ変換
@@ -260,7 +260,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 zorder=1,
                 label="実測値",
             )
-            axes[5].legend()
+            axes[5].legend(fontsize=FONT_SIZE - 2)
         elif endCondition["impedance"] == 1e6:
             df = pd.read_csv("csv/c1_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
@@ -271,7 +271,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 zorder=1,
                 label="実測値",
             )
-            axes[5].legend()
+            axes[5].legend(fontsize=FONT_SIZE - 2)
     ### 実測値の時間応答
 
     r2 = np.fft.irfft(convolution_input, len(times))
@@ -302,7 +302,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 zorder=1,
                 label="実測値",
             )
-            axes[6].legend()
+            axes[6].legend(fontsize=FONT_SIZE - 2)
         elif endCondition["impedance"] == 1e6:
             df = pd.read_csv("csv/c2_200ns_open.csv", skiprows=11)
             seconds = list(df["Second"])
@@ -313,7 +313,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
                 zorder=1,
                 label="実測値",
             )
-            axes[6].legend()
+            axes[6].legend(fontsize=FONT_SIZE - 2)
     ### 実測値の時間応答
 
     plt.tight_layout()
@@ -323,7 +323,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    # {"shouldMatching": False, "impedance": 1e6},
-    {"shouldMatching": False, "impedance": 50},
+    {"shouldMatching": False, "impedance": 1e6},
+    # {"shouldMatching": False, "impedance": 50},
     showMeasuredValue=True,
 )

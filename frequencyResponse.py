@@ -210,7 +210,7 @@ def drawFrequencyResponse(frequencies_Hz, cable, showMeasuredValue=False, fileNa
             frequencies_Hz = list(df["Frequency(Hz)"])
             amps = list(df["CH1 Amplitude(dB)"])
             ax.plot([frequency_Hz / 1e6 for frequency_Hz in frequencies_Hz], amps, label="実測値")
-            ax.legend()
+            ax.legend(fontsize=FONT_SIZE - 2)
 
     if fileName != "":
         fig.savefig(util.createImagePath(fileName))

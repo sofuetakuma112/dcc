@@ -122,6 +122,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
         tfs
     )  # 時間軸の畳み込み積分 = フーリエ変換した値同士の積(の値も周波数軸のもの)
 
+    # C1
     axes[3].plot(
         [freq / 1e6 for freq in frequencies[:2501]],
         np.abs(convolution_out)[:2501],
@@ -168,6 +169,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
             axes[3].legend(fontsize=FONT_SIZE - 2)
     ### 実測値の周波数応答
 
+    # C2
     tfs_sg = []  # 受電端抵抗を分布定数線路の送電端から見たインピーダンスとし、SGをF行列とした時の伝達関数
     for frequency_Hz in frequencies:
         # 送電端から見たインピーダンスを計算する
@@ -323,7 +325,7 @@ def squareWaveFftAndIfft(cable, endCondition, showMeasuredValue=False):
 # 受電端の抵抗が0のとき、断線していない正常のケーブル？
 squareWaveFftAndIfft(
     cable.cable_vertual,
-    {"shouldMatching": False, "impedance": 1e6},
-    # {"shouldMatching": False, "impedance": 50},
+    # {"shouldMatching": False, "impedance": 1e6},
+    {"shouldMatching": False, "impedance": 50},
     showMeasuredValue=True,
 )

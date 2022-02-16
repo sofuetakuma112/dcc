@@ -52,11 +52,64 @@ print(f"平均の山の間隔: {ave}[Hz]")
 # fig, axes = plt.subplots(2, 1)
 axes = [plt.subplots()[1]]
 
-FONT_SIZE = 12
+FONT_SIZE = 16
 axes[0].plot([frequency_Hz / 1e6 for frequency_Hz in frequencies_Hz], amps)
 axes[0].set_ylabel("$H_{dB}$[dB]", fontsize=FONT_SIZE)
 axes[0].set_xlabel("Frequency[MHz]", fontsize=FONT_SIZE)
 # axes[0].xaxis.set_major_formatter(pltSettings.FixedOrderFormatter(6, useMathText=True))
+
+# 1つ目の山の部分に縦線
+axes[0].plot(
+    [mountainFreq_1 / 1e6, mountainFreq_1 / 1e6],
+    [0, 27],
+    color="black",
+    linestyle="dashed",
+)
+# 2つ目の山の部分に縦線
+axes[0].plot(
+    [mountainFreq_2 / 1e6, mountainFreq_2 / 1e6],
+    [0, 27],
+    color="black",
+    linestyle="dashed",
+)
+# 3つ目の山の部分に縦線
+axes[0].plot(
+    [mountainFreq_3 / 1e6, mountainFreq_3 / 1e6],
+    [0, 27],
+    color="black",
+    linestyle="dashed",
+)
+# 山1, 山2の縦線の間に矢印
+axes[0].arrow(
+    x=mountainFreq_1 / 1e6,
+    y=20,
+    dx=abs(mountainFreq_1 - mountainFreq_2) / 1e6,
+    dy=0,
+    width=0.01,
+    head_width=1,
+    head_length=1,
+    length_includes_head=True,
+    color="skyblue",
+)
+# fw1の文言を表示
+plt.text(14, 17, "$f_{w1}$", fontsize=FONT_SIZE + 2)
+# 山2, 山3の縦線の間に矢印
+axes[0].arrow(
+    x=mountainFreq_2 / 1e6,
+    y=15,
+    dx=abs(mountainFreq_2 - mountainFreq_3) / 1e6,
+    dy=0,
+    width=0.01,
+    head_width=1,
+    head_length=1,
+    length_includes_head=True,
+    color="skyblue",
+)
+# fw1の文言を表示
+plt.text(31, 12, "$f_{w2}$", fontsize=FONT_SIZE + 2)
+
+axes[0].tick_params(axis="y", labelsize=FONT_SIZE)
+axes[0].tick_params(axis="x", labelsize=FONT_SIZE)
 
 # axes[1].plot(frequencies_Hz, phases)
 # # axes[1].set_title("input(t)")

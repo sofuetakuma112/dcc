@@ -175,5 +175,5 @@ drawFrequencyResponse(
     # 損失ありケーブル用
     list(range(0, 50 * util.ONE_HUNDRED, 10000)),
     cable.cable_vertual,
-    showMeasuredValue=True,
+    # showMeasuredValue=True,
 )
